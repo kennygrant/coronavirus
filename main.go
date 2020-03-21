@@ -15,8 +15,9 @@ import (
 // Store our data globally, don't touch it after server start
 var data covid.SeriesSlice
 
-// Store our template globally, don't touch it after server start
-//var template html.Template
+// Store our templates globally, don't touch it after server start
+var htmlTemplate *template.Template
+var jsonTemplate *template.Template
 
 // Main loads data, sets up a periodic fetch, and starts a web server to serve that data
 func main() {
@@ -34,7 +35,18 @@ func main() {
 
 	log.Printf("server: loaded data in %s len:%d", time.Now().Sub(start), len(data))
 
-	// Load our one template file for now into memory
+	// Load our template files into memory
+	htmlTemplate, err = template.ParseFiles("index.html.got")
+	if err != nil {
+		log.Fatalf("template error:%s", err)
+	}
+	funcMap := map[string]interface{}{
+		"e": escapeJSON,
+	}
+	jsonTemplate, err = template.New("index.json.got").Funcs(funcMap).ParseFiles("index.json.got")
+	if err != nil {
+		log.Fatalf("template error:%s", err)
+	}
 
 	// Set up the https server with the handler attached to serve this data in a template
 	http.HandleFunc("/favicon.ico", handleFile)
@@ -47,8 +59,6 @@ func main() {
 
 // handleHome shows our website
 func handleHome(w http.ResponseWriter, r *http.Request) {
-	// Log the request
-	log.Printf("request:%s", r.URL)
 
 	// Get the parameters from the url
 	country, province, period := parseParams(r)
@@ -65,14 +75,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		series = series.Days(period)
 	}
 
-	log.Printf("request: country:%s province:%s period:%d", country, province, period)
-
-	// Read the template from our local file and render
-	tmpl, err := template.ParseFiles("layout.html.got")
-	if err != nil {
-		log.Printf("template error:%s", err)
-		http.Error(w, err.Error(), 500)
-	}
+	log.Printf("request:%s country:%s province:%s period:%d", r.URL, country, province, period)
 
 	// Set up context with data
 	context := map[string]interface{}{
@@ -85,10 +88,18 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		"provinceOptions": data.ProvinceOptions(series.Country),
 	}
 
-	// Render the template
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(200)
-	err = tmpl.Execute(w, context)
+	// Render the template, either html or json
+	if strings.HasSuffix(r.URL.Path, ".json") {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(200)
+		err = jsonTemplate.Execute(w, context)
+	} else {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(200)
+		err = htmlTemplate.Execute(w, context)
+	}
+
+	// Check for errors on render
 	if err != nil {
 		log.Printf("template render error:%s", err)
 		http.Error(w, err.Error(), 500)
@@ -100,7 +111,13 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 func parseParams(r *http.Request) (country, province string, period int) {
 
 	// Parse the path
-	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	p := r.URL.Path
+
+	// First remove .json if it exists
+	p = strings.Replace(p, ".json", "", 1)
+
+	// Now parse parts
+	parts := strings.Split(strings.Trim(p, "/"), "/")
 
 	if len(parts) > 0 {
 		country = parts[0]
@@ -132,6 +149,11 @@ func parseParams(r *http.Request) (country, province string, period int) {
 		country = "United Kingdom"
 	}
 
+	// Allow global for top level (for global.json)
+	if country == "global" {
+		country = ""
+	}
+
 	return country, province, period
 }
 
@@ -154,4 +176,16 @@ func handleFile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	*/
+}
+
+// JSON escape function
+func escapeJSON(t string) template.HTML {
+	// Escape mandatory characters
+	t = strings.Replace(t, "\r", " ", -1)
+	t = strings.Replace(t, "\n", " ", -1)
+	t = strings.Replace(t, "\t", " ", -1)
+	t = strings.Replace(t, "\\", "\\\\", -1)
+	t = strings.Replace(t, "\"", "\\\"", -1)
+	// Because we use html/template escape as temlate.HTML
+	return template.HTML(t)
 }
