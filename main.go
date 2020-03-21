@@ -62,12 +62,9 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("request: country:%s province:%s", country, province)
 
-	template := `<html><body><h1>%s%s</h1><p>Deaths:%v</p><p>Confirmed:%v</p><p>Recovered:%v</p></body></html>`
-	if province != "" {
-		template = `<html><body><h1>%s > %s</h1><p>Deaths:%v</p><p>Confirmed:%v</p><p>Recovered:%v</p></body></html>`
-	}
+	template := `<html><body><h1>%s</h1><p>Deaths:%v</p><p>Confirmed:%v</p><p>Recovered:%v</p></body></html>`
 
-	response := fmt.Sprintf(template, series.Country, series.Province, series.Deaths, series.Confirmed, series.Recovered)
+	response := fmt.Sprintf(template, series.Title(), series.Deaths, series.Confirmed, series.Recovered)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(200)

@@ -28,6 +28,17 @@ type Series struct {
 	Recovered []int
 }
 
+// Title returns a display title for this series
+func (s *Series) Title() string {
+	if s.Country == "" && s.Province == "" {
+		return "Global"
+	} else if s.Province == "" {
+		return s.Country
+	}
+
+	return fmt.Sprintf("%s > %s", s.Country, s.Province)
+}
+
 // FetchDate retusn the data for the given data from datum
 func (s *Series) FetchDate(datum int, date time.Time) int {
 
