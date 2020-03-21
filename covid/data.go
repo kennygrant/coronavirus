@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
@@ -73,7 +74,6 @@ func processData(data SeriesSlice) SeriesSlice {
 	for _, s := range data {
 		if s.Province == s.Country {
 			s.Province = ""
-			log.Printf("Blanked:%s", s.Country)
 		}
 	}
 
@@ -146,28 +146,26 @@ func processData(data SeriesSlice) SeriesSlice {
 
 	}
 
-	log.Printf("Added China Series:%s %s %v", China.Country, China.Province, China.Confirmed)
+	//	log.Printf("Added China Series:%s %s %v", China.Country, China.Province, China.Confirmed)
 	data = append(data, China)
 
-	log.Printf("Added US Series:%s %s %v", US.Country, US.Province, US.Confirmed)
+	//	log.Printf("Added US Series:%s %s %v", US.Country, US.Province, US.Confirmed)
 	data = append(data, US)
 
-	log.Printf("Added Australia Series:%s %s %v", Australia.Country, Australia.Province, Australia.Confirmed)
+	//	log.Printf("Added Australia Series:%s %s %v", Australia.Country, Australia.Province, Australia.Confirmed)
 	data = append(data, Australia)
 
-	log.Printf("Added Canada Series:%s %s %v", Canada.Country, Canada.Province, Canada.Confirmed)
+	//	log.Printf("Added Canada Series:%s %s %v", Canada.Country, Canada.Province, Canada.Confirmed)
 	data = append(data, Canada)
 
-	log.Printf("Added Global Series:%s %s %v", Global.Country, Global.Province, Global.Confirmed)
+	log.Printf("Added Global Series:%s %s %v", Global.Country, Global.Province, Global.Deaths)
 	data = append(data, Global)
 
-	// Should we sum data for countries like UK, to include dependencies? For consistency, this seems sensible
-	// the original dataset is inconsistent in this regard
-	for _, s := range data {
-		if s.Country == "United Kingdom" {
-			log.Printf("SERIES:%v", s)
-		}
-	}
+	// Sort the data alphabetically by country and then province
+	sort.Sort(data)
+
+	// TODO - should we sum data for countries like UK, to include dependencies for consistency?
+	// the original dataset has some like China done this way, but others like UK seem to not. Check data.
 
 	return data
 }

@@ -93,16 +93,14 @@ func (s *Series) Match(country string, province string) bool {
 
 // Merge the data from the incoming series with ours
 func (s *Series) Merge(series *Series) {
-	// If we are len 0 just replace series
+	// If we are len 0 make sure we have enough space
 	if len(s.Deaths) == 0 {
-		s.Deaths = series.Deaths
-		s.Confirmed = series.Confirmed
-		s.Recovered = series.Recovered
-		return // replace and return
+		s.Deaths = make([]int, len(series.Deaths))
+		s.Confirmed = make([]int, len(series.Confirmed))
+		s.Recovered = make([]int, len(series.Recovered))
 	}
 
-	// Else we have data already, so add to it
-	// we assume the same number of dates for all series
+	// Then add to the data we have (if any)
 	for i, d := range series.Deaths {
 		s.Deaths[i] += d
 	}
@@ -175,6 +173,17 @@ func (s *Series) Days(days int) *Series {
 
 // SeriesSlice is a collection of Series
 type SeriesSlice []*Series
+
+func (slice SeriesSlice) Len() int      { return len(slice) }
+func (slice SeriesSlice) Swap(i, j int) { slice[i], slice[j] = slice[j], slice[i] }
+
+// Sort first on number of deaths, then on alpha order
+func (slice SeriesSlice) Less(i, j int) bool {
+	if slice[i].TotalDeaths() > 0 {
+		return slice[i].TotalDeaths() > slice[j].TotalDeaths()
+	}
+	return slice[i].Country < slice[j].Country
+}
 
 // FetchDate fetches the datapiont for a given datum and date
 func (slice SeriesSlice) FetchDate(country, province string, datum int, date time.Time) (int, error) {
@@ -271,7 +280,7 @@ func (slice SeriesSlice) MergeCSV(records [][]string, dataType int) (SeriesSlice
 			// We ignore rows which match ,CA etc
 			// these are US sub-state level data which is no longer included in the dataset and is zeroed out
 			if country == "US" && strings.Contains(province, ", ") {
-				fmt.Printf("ignoring series:%s %s\n", country, province)
+				//	fmt.Printf("ignoring series:%s %s\n", country, province)
 				continue
 			}
 
