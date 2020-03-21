@@ -68,7 +68,8 @@ func loadCSVFile(path string, data SeriesSlice) (SeriesSlice, error) {
 func processData(data SeriesSlice) SeriesSlice {
 
 	// Set all series with a province matching country to blank province instead
-	// so that countries don't have a duplicate province set
+	// so that countries don't have a duplicate province set - the dataset is inconsistent in this regard
+	// At present this is France, Denmark, United Kingdom, Netherlands
 	for _, s := range data {
 		if s.Province == s.Country {
 			s.Province = ""
@@ -79,6 +80,13 @@ func processData(data SeriesSlice) SeriesSlice {
 	// Generate extra series not include in the data
 	startDate := time.Date(2020, 1, 22, 0, 0, 0, 0, time.UTC)
 
+	// Build a China series
+	China := &Series{
+		Country:  "China",
+		Province: "",
+		StartsAt: startDate,
+	}
+
 	// Build a US series
 	US := &Series{
 		Country:  "US",
@@ -86,28 +94,75 @@ func processData(data SeriesSlice) SeriesSlice {
 		StartsAt: startDate,
 	}
 
+	// Build an Australia series
+	Australia := &Series{
+		Country:  "Australia",
+		Province: "",
+		StartsAt: startDate,
+	}
+
+	// Build an Australia series
+	Canada := &Series{
+		Country:  "Canada",
+		Province: "",
+		StartsAt: startDate,
+	}
+
 	// Build a Global series
-	global := &Series{
+	Global := &Series{
 		Country:  "",
 		Province: "",
 		StartsAt: startDate,
 	}
 
-	// Walk the existing series and combine all US state-level data (including dependencies, excluding cruise ships etc)
-	// may need to finesse this
+	// Add global country entries for countries with data broken down at province level
+	// Add a global dataset from all other datasets combined
 	for _, s := range data {
-		if s.Country == "US" && !s.USCity() {
-			//		log.Printf("US State:%s %v", s.Province, s.Confirmed)
+
+		// Build an overall China series
+		if s.Country == "China" {
+			China.Merge(s)
+		}
+
+		// Build an overall US series
+		// NB this ignores the US sub-state level data which we exclude from the dataset as it is no longer accurate
+		// for newer dates this data is zeroed anyway
+		if s.Country == "US" {
 			US.Merge(s)
 		}
+
+		// Build an overall Australia series
+		if s.Country == "Australia" {
+			Australia.Merge(s)
+		}
+
+		// Build an overall Canada series
+		if s.Country == "Canada" {
+			Canada.Merge(s)
+		}
+
+		// Build a global series
+		Global.Merge(s)
+
 	}
+
+	log.Printf("Added China Series:%s %s %v", China.Country, China.Province, China.Confirmed)
+	data = append(data, China)
 
 	log.Printf("Added US Series:%s %s %v", US.Country, US.Province, US.Confirmed)
 	data = append(data, US)
 
-	log.Printf("Added Global Series:%s %s %v", global.Country, global.Province, global.Confirmed)
-	data = append(data, global)
+	log.Printf("Added Australia Series:%s %s %v", Australia.Country, Australia.Province, Australia.Confirmed)
+	data = append(data, Australia)
 
+	log.Printf("Added Canada Series:%s %s %v", Canada.Country, Canada.Province, Canada.Confirmed)
+	data = append(data, Canada)
+
+	log.Printf("Added Global Series:%s %s %v", Global.Country, Global.Province, Global.Confirmed)
+	data = append(data, Global)
+
+	// Should we sum data for countries like UK, to include dependencies? For consistency, this seems sensible
+	// the original dataset is inconsistent in this regard
 	for _, s := range data {
 		if s.Country == "United Kingdom" {
 			log.Printf("SERIES:%v", s)

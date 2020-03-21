@@ -69,12 +69,6 @@ func (s *Series) Valid() bool {
 	return !s.StartsAt.IsZero()
 }
 
-// USCity returns true if this is a US City (not a state or boat)
-// this makes assumptions about city/area naming in the data
-func (s *Series) USCity() bool {
-	return s.Country == "US" && strings.Contains(s.Province, ", ")
-}
-
 // Match returns true if this series matches data from a row
 // performs a case insensitive match
 func (s *Series) Match(country string, province string) bool {
@@ -172,6 +166,13 @@ func (slice SeriesSlice) MergeCSV(records [][]string, dataType int) (SeriesSlice
 			// Fetch data to match series
 			country := row[1]
 			province := row[0]
+
+			// We ignore rows which match ,CA etc
+			// these are US sub-state level data which is no longer included in the dataset and is zeroed out
+			if country == "US" && strings.Contains(province, ", ") {
+				fmt.Printf("ignoring series:%s %s\n", country, province)
+				continue
+			}
 
 			// Fetch the series
 			var series *Series

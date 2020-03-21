@@ -14,12 +14,14 @@ func TestLoadData(t *testing.T) {
 	}
 
 	// Test data is older and fixed in length
-	if len(data) != 463 {
+	// We exclude US counties/cities as data is no longer accurate
+	// We add some global country entries which are not already there
+	if len(data) != 276 {
 		t.Fatalf("test: load data failed wrong len:%d", len(data))
 	}
 
 	// Test fetching datum
-	series, err := data.FetchSeries("United Kingdom", "United Kingdom")
+	series, err := data.FetchSeries("United Kingdom", "")
 	if err != nil {
 		t.Fatalf("test: failed fetching day of UK:%s", err)
 	}
@@ -39,7 +41,7 @@ func TestLoadData(t *testing.T) {
 		t.Fatalf("test: failed fetching day 0 of Kyrgyzstan:%s", err)
 	}
 	date, _ = time.Parse("2006-01-02", "2020-03-16")
-	value, err = data.FetchDate("United Kingdom", "United Kingdom", DataDeaths, date)
+	value, err = data.FetchDate("United Kingdom", "", DataDeaths, date)
 	if err != nil {
 		t.Fatalf("test: failed fetching day of UK:%s", err)
 	}
@@ -57,7 +59,7 @@ func TestLoadData(t *testing.T) {
 	}
 
 	date, _ = time.Parse("2006-01-02", "2020-03-01")
-	value, err = data.FetchDate("US", "US", DataConfirmed, date)
+	value, err = data.FetchDate("US", "", DataConfirmed, date)
 	if err != nil {
 		t.Fatalf("test: failed fetching day of US:%s", err)
 	}
