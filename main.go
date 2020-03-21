@@ -1,14 +1,18 @@
 package main
 
 import (
+	"crypto/tls"
 	"html/template"
 	"log"
 	"net/http"
-	"path"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/kennygrant/coronavirus/covid"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 // Store our templates globally, don't touch it after server start
@@ -17,7 +21,16 @@ var jsonTemplate *template.Template
 
 // Main loads data, sets up a periodic fetch, and starts a web server to serve that data
 func main() {
-	log.Printf("server: restarting")
+	development := false
+	if os.Getenv("COVID") == "dev" {
+		development = true
+	}
+
+	if development {
+		log.Printf("server: restarting in development mode")
+	} else {
+		log.Printf("server: restarting")
+	}
 
 	// Schedule a regular fetch of data at a specified time daily
 	covid.ScheduleDataFetch()
@@ -44,10 +57,19 @@ func main() {
 	// Set up the https server with the handler attached to serve this data in a template
 	http.HandleFunc("/favicon.ico", handleFile)
 	http.HandleFunc("/", handleHome)
-	err = http.ListenAndServe(":3000", nil)
-	if err != nil {
-		log.Fatal(err)
+
+	// Start a server on port 443 (or another port if dev specified)
+	if development {
+		// In development just serve with http on local port 3000
+		err = http.ListenAndServe(":3000", nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		domains := []string{"coronavirus.projectpage.app"}
+		StartTLSServer(development, domains)
 	}
+
 }
 
 // handleHome shows our website
@@ -153,22 +175,19 @@ func parseParams(r *http.Request) (country, province string, period int) {
 // handleFile shows a file (if it exists)
 func handleFile(w http.ResponseWriter, r *http.Request) {
 
-	// Get the URL path
-	p := path.Clean(r.URL.Path)
+	// Serve the local path
+	localPath := "./public" + filepath.Clean(r.URL.Path)
 
-	log.Printf("file:%s", p)
+	// Check it exists
+	_, err := os.Stat(localPath)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
 
-	// Construct a local path
-
-	// For now just return not found
-	http.NotFound(w, r)
-
-	/*
-		if r.URL.Path == "/favicon.ico" {
-			http.NotFound(w, r)
-			return
-		}
-	*/
+	// Try to serve the file
+	//log.Printf("file:%s", localPath)
+	http.ServeFile(w, r, localPath)
 }
 
 // JSON escape function
@@ -181,4 +200,57 @@ func escapeJSON(t string) template.HTML {
 	t = strings.Replace(t, "\"", "\\\"", -1)
 	// Because we use html/template escape as temlate.HTML
 	return template.HTML(t)
+}
+
+// StartTLSServer starts a TLS server using lets encrypt
+func StartTLSServer(dev bool, domains []string) {
+	certManager := &autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		Email:      "",                                 // Email for problems with certs
+		HostPolicy: autocert.HostWhitelist(domains...), // Domains to request certs for
+		Cache:      autocert.DirCache("secrets"),       // Cache certs in secrets folder
+	}
+
+	server := &http.Server{
+		// Set the port in the preferred string format
+		Addr: ":443",
+
+		// The default server from net/http has no timeouts - set some limits
+		ReadHeaderTimeout: 30 * time.Second,
+		ReadTimeout:       60 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       10 * time.Second, // IdleTimeout was introduced in Go 1.8
+
+		// This TLS config follows recommendations in the above article
+		TLSConfig: &tls.Config{
+			// Pass in a cert manager if you want one set
+			// this will only be used if the server Certificates are empty
+			GetCertificate: certManager.GetCertificate,
+
+			// VersionTLS11 or VersionTLS12 would exclude many browsers
+			// inc. Android 4.x, IE 10, Opera 12.17, Safari 6
+			// So unfortunately not acceptable as a default yet
+			// Current default here for clarity
+			MinVersion: tls.VersionTLS10,
+
+			// Causes servers to use Go's default ciphersuite preferences,
+			// which are tuned to avoid attacks. Does nothing on clients.
+			PreferServerCipherSuites: true,
+			// Only use curves which have assembly implementations
+			CurvePreferences: []tls.CurveID{
+				tls.CurveP256,
+				tls.X25519, // Go 1.8 only
+			},
+		},
+	}
+
+	// Handle all :80 traffic using autocert to allow http-01 challenge responses
+	go func() {
+		http.ListenAndServe(":80", certManager.HTTPHandler(nil))
+	}()
+
+	err := server.ListenAndServeTLS("", "")
+	if err != nil {
+		log.Printf("error: starting server %s", err)
+	}
 }
