@@ -36,7 +36,7 @@ func (s *Series) Title() string {
 		return s.Country
 	}
 
-	return fmt.Sprintf("%s > %s", s.Country, s.Province)
+	return fmt.Sprintf("%s (%s)", s.Province, s.Country)
 }
 
 // Dates returns a set of date labels as an array of strings
@@ -222,7 +222,8 @@ func (slice SeriesSlice) PeriodOptions() (options []Option) {
 
 	options = append(options, Option{Name: "All Time", Value: "0"})
 	options = append(options, Option{Name: "7 Days", Value: "7"})
-	options = append(options, Option{Name: "30 Days", Value: "30"})
+	options = append(options, Option{Name: "14 Days", Value: "14"})
+	options = append(options, Option{Name: "28 Days", Value: "28"})
 
 	return options
 }
@@ -247,9 +248,10 @@ func (slice SeriesSlice) CountryOptions() (options []Option) {
 // for now just show all which have province filled in.
 func (slice SeriesSlice) ProvinceOptions(country string) (options []Option) {
 
-	// TODO - filter on country here always
+	options = append(options, Option{Name: "Areas", Value: ""})
+
 	for _, s := range slice {
-		if s.Province != "" {
+		if s.Country == country && s.Province != "" {
 			options = append(options, Option{Name: s.Province, Value: s.Key(s.Province)})
 		}
 	}

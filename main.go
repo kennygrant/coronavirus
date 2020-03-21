@@ -82,7 +82,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		"series":          series,
 		"periodOptions":   data.PeriodOptions(),
 		"countryOptions":  data.CountryOptions(),
-		"provinceOptions": data.ProvinceOptions(""),
+		"provinceOptions": data.ProvinceOptions(series.Country),
 	}
 
 	// Render the template

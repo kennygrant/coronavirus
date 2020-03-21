@@ -64,6 +64,16 @@
 {{ end }}
 </select>
 
+{{ if gt (len .provinceOptions) 0 }}
+    <select class="filter-select" name="province">
+    {{ range .provinceOptions}}
+    <option value="{{.Value}}" {{ if eq .Value $.province}}selected{{end}}>{{.Name}}</option>
+    {{ end }}
+    </select>
+{{ else }}
+<input type="hidden" name="province">
+{{ end }}
+
 <select class="filter-select" name="period">
 {{ range .periodOptions}}
 <option value="{{.Value}}" {{ if eq .Value $.period}}selected{{end}}>{{.Name}}</option>
@@ -197,9 +207,29 @@ for (i = 0; i < filters.length; i++) {
       
         // Should we instead perhaps build url and set action of form first?
         // this would be nicer than having everything as a query param
+        var form = this.form;
 
-       // Submit the form 
-       this.form.submit();
+        // Disable attributes so they are not sent 
+        form["country"].setAttribute("disabled","disabled");
+        form["province"].setAttribute("disabled","disabled");
+
+        // Build a url and set the action to this url 
+        url ="/"
+        var country = form["country"].value
+        if (country != "") {
+            url = url + country
+        }
+        // Get the province value, unless the user changed country
+        var province = form["province"].value
+        if (province != "" && this.name != "country") {
+            url = url + "/" + province
+        }
+        console.log("URL",url)
+      
+        form.action = url 
+
+        // Submit the form 
+        form.submit();
 
     })
 }
