@@ -15,13 +15,15 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 )
 
+var development = false
+
 // Store our templates globally, don't touch it after server start
 var htmlTemplate *template.Template
 var jsonTemplate *template.Template
 
 // Main loads data, sets up a periodic fetch, and starts a web server to serve that data
 func main() {
-	development := false
+
 	if os.Getenv("COVID") == "dev" {
 		development = true
 	}
@@ -42,17 +44,7 @@ func main() {
 	}
 
 	// Load our template files into memory
-	htmlTemplate, err = template.ParseFiles("index.html.got")
-	if err != nil {
-		log.Fatalf("template error:%s", err)
-	}
-	funcMap := map[string]interface{}{
-		"e": escapeJSON,
-	}
-	jsonTemplate, err = template.New("index.json.got").Funcs(funcMap).ParseFiles("index.json.got")
-	if err != nil {
-		log.Fatalf("template error:%s", err)
-	}
+	loadTemplates()
 
 	// Set up the https server with the handler attached to serve this data in a template
 	http.HandleFunc("/favicon.ico", handleFile)
@@ -70,6 +62,21 @@ func main() {
 		StartTLSServer(development, domains)
 	}
 
+}
+
+func loadTemplates() {
+	var err error
+	htmlTemplate, err = template.ParseFiles("index.html.got")
+	if err != nil {
+		log.Fatalf("template error:%s", err)
+	}
+	funcMap := map[string]interface{}{
+		"e": escapeJSON,
+	}
+	jsonTemplate, err = template.New("index.json.got").Funcs(funcMap).ParseFiles("index.json.got")
+	if err != nil {
+		log.Fatalf("template error:%s", err)
+	}
 }
 
 // handleHome shows our website
@@ -101,6 +108,11 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		"periodOptions":   covid.PeriodOptions(),
 		"countryOptions":  covid.CountryOptions(),
 		"provinceOptions": covid.ProvinceOptions(series.Country),
+	}
+
+	// If in development reload templates each time
+	if development {
+		loadTemplates()
 	}
 
 	// Render the template, either html or json

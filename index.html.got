@@ -8,25 +8,30 @@
 </head>
 
 <style>
+
+
     html {
         background:#fff;
         color:#333;
-        font:1.1em/1.5em "Open Sans", sans-serif;
+        font:1.1em/1.8em "Open Sans", sans-serif;
     }
+
     h1 {
         font-weight:100;
         text-align:center;
         padding:0.5rem;
         margin:0;
+        font-size:2.5em;
     }
-    .chart {
-        margin-bottom:1rem;
-    }
+
+
+
     .filters {
         padding:0.5rem 1rem;
         margin:0 auto;
         text-align:center;
     }
+
     select {
         position:relative;
         margin: 0;
@@ -34,15 +39,20 @@
         font-size: 0.8em;
         border: none;
         border-radius:0.1rem;
+        background-color:#eee;
         -webkit-appearance: none;
         -moz-appearance: none;
         appearance: none;
         z-index:9999;
     }
     
+    .chart {
+        margin-top:0.5rem;
+    }
+
     .chart_container {
         position: relative;
-        height:28vh;
+        height:26vh;
     }
 
     footer {
@@ -50,6 +60,27 @@
         clear:both;
         text-align:center;
         font-size:0.6em;
+    }
+
+    @media(max-width:1200px) {
+        h1 {
+            font:3em/1.2em "Open Sans", sans-serif;
+            margin:1rem 0;
+        }
+
+        select {
+            font-size:2em;
+            width:30%;
+        }
+
+        .chart_container {
+            position: relative;
+            height:36vh;
+         }
+
+         .chart {
+           margin-top:2.5rem;
+         }
     }
 
 </style>
@@ -104,18 +135,29 @@
 
 <script>
 
+/* Determine font size based on device */
+var fontSize  = 5;
+var maxTicks = 8;
+if (document.body.clientWidth > 1000) {
+    fontSize = 2;
+    maxTicks = 31;
+    console.log("small font")
+}
+
 var chartOptions = {
     title: {
             display: true,
-            fontSize:20,
+            fontSize:fontSize*10,
             fontStyle: 'normal',
             text: "{{.series.RecoveredDisplay}} Recovered"
      },
     scales: {
          xAxes: [{
             ticks: {
+                padding:10,
+                fontSize:fontSize*5,
                 autoSkip: true,
-                maxTicksLimit: 30
+                maxTicksLimit: maxTicks
             },
             gridLines: {
                 color:"rgba(255, 255, 255,0)",
@@ -125,6 +167,7 @@ var chartOptions = {
          yAxes: [{
            position: "right",
             ticks: {
+                fontSize:fontSize*5,
                 autoSkip: true,
                 maxTicksLimit: 5,
                 callback: function(value, index, values) {
@@ -243,6 +286,7 @@ for (i = 0; i < filters.length; i++) {
 
     })
 }
+
 
 </script>
 </body>
