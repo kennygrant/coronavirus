@@ -7,13 +7,9 @@ import (
 	"path"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/kennygrant/coronavirus/covid"
 )
-
-// Store our data globally, don't touch it after server start
-var data covid.SeriesSlice
 
 // Store our templates globally, don't touch it after server start
 var htmlTemplate *template.Template
@@ -23,17 +19,14 @@ var jsonTemplate *template.Template
 func main() {
 	log.Printf("server: restarting")
 
-	// TODO - Set up a fetch to get the latest data later on
+	// Schedule a regular fetch of data at a specified time daily
+	covid.ScheduleDataFetch()
 
 	// Load the data
-	var err error
-	start := time.Now()
-	data, err = covid.LoadData("./data")
+	err := covid.LoadData()
 	if err != nil {
 		log.Fatalf("server: failed to load data:%s", err)
 	}
-
-	log.Printf("server: loaded data in %s len:%d", time.Now().Sub(start), len(data))
 
 	// Load our template files into memory
 	htmlTemplate, err = template.ParseFiles("index.html.got")
@@ -64,7 +57,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	country, province, period := parseParams(r)
 
 	// Fetch the series concerned - if both are blank we'll get the global series
-	series, err := data.FetchSeries(country, province)
+	series, err := covid.FetchSeries(country, province)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -83,9 +76,9 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		"country":         series.Key(series.Country),
 		"province":        series.Key(series.Province),
 		"series":          series,
-		"periodOptions":   data.PeriodOptions(),
-		"countryOptions":  data.CountryOptions(),
-		"provinceOptions": data.ProvinceOptions(series.Country),
+		"periodOptions":   covid.PeriodOptions(),
+		"countryOptions":  covid.CountryOptions(),
+		"provinceOptions": covid.ProvinceOptions(series.Country),
 	}
 
 	// Render the template, either html or json

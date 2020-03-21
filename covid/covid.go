@@ -4,8 +4,15 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
+
+// Data mutex to protect access to data
+var mutex sync.RWMutex
+
+// Store our data globally, use mutex to access
+var data SeriesSlice
 
 // Data types for imported series data
 const (
@@ -226,14 +233,29 @@ func (slice SeriesSlice) FetchSeries(country string, province string) (*Series, 
 	return &Series{}, fmt.Errorf("series: not found")
 }
 
-// Option is used to generate options for selects in the view
-type Option struct {
-	Name  string
-	Value string
+// FetchSeries uses our stored data to fetch a series
+func FetchSeries(country string, province string) (*Series, error) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	return data.FetchSeries(country, province)
+}
+
+// CountryOptions uses our stored data to fetch country options
+func CountryOptions() (options []Option) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	return data.CountryOptions()
+}
+
+// ProvinceOptions uses our stored data to fetch province options for a country
+func ProvinceOptions(country string) (options []Option) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	return data.ProvinceOptions(country)
 }
 
 // PeriodOptions returns a set of options for period filters
-func (slice SeriesSlice) PeriodOptions() (options []Option) {
+func PeriodOptions() (options []Option) {
 
 	options = append(options, Option{Name: "All Time", Value: "0"})
 	options = append(options, Option{Name: "1 Day", Value: "1"})
@@ -244,6 +266,12 @@ func (slice SeriesSlice) PeriodOptions() (options []Option) {
 	options = append(options, Option{Name: "28 Days", Value: "28"})
 
 	return options
+}
+
+// Option is used to generate options for selects in the view
+type Option struct {
+	Name  string
+	Value string
 }
 
 // CountryOptions returns a set of options for the country dropdown (including a global one)

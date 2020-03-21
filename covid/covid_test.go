@@ -1,14 +1,25 @@
 package covid
 
 import (
+	"os"
 	"testing"
 	"time"
 )
 
+func TestFetchData(t *testing.T) {
+	// change dir back to root
+	os.Chdir("..")
+	err := FetchData()
+	if err != nil {
+		t.Fatalf("error fetching data:%s", err)
+	}
+}
+
 func TestLoadData(t *testing.T) {
 
 	// Test with test data - we expect a dataset of at least 462 provinces/countries
-	data, err := LoadData("./testdata/")
+	dataPath = "./testdata/"
+	err := LoadData()
 	if err != nil {
 		t.Fatalf("error loading data:%s", err)
 	}
