@@ -45,52 +45,62 @@
         height:28vh;
     }
 
-
-    @media (min-width: 800px) {
-       
+    footer {
+        display:block;
+        clear:both;
+        text-align:center;
+        font-size:0.6em;
     }
 
 </style>
 
 <body>
-<div class="ground"></div>
 
-<h1><span id="chart_title">{{.series.Title}}</span> Coronavirus Cases</h1>
+    <header>
+    <h1><span id="chart_title">{{.series.Title}}</span> Coronavirus Cases</h1>
+    </header>
+    
+    <article>
+    <form class="filters" method="get" action="/">
+        <select class="filter-select" name="country">
+            {{ range .countryOptions}}
+                <option value="{{.Value}}" {{ if eq .Value $.country}}selected{{end}}>{{.Name}}</option>
+            {{ end }}
+        </select>
 
-<form class="filters" method="get" action="/">
-<select class="filter-select" name="country">
-{{ range .countryOptions}}
-<option value="{{.Value}}" {{ if eq .Value $.country}}selected{{end}}>{{.Name}}</option>
-{{ end }}
-</select>
+        {{ if gt (len .provinceOptions) 1 }}
+            <select class="filter-select" name="province">
+            {{ range .provinceOptions}}
+                <option value="{{.Value}}" {{ if eq .Value $.province}}selected{{end}}>{{.Name}}</option>
+            {{ end }}
+            </select>
+        {{ else }}
+            <input type="hidden" name="province">
+        {{ end }}
 
-{{ if gt (len .provinceOptions) 0 }}
-    <select class="filter-select" name="province">
-    {{ range .provinceOptions}}
-    <option value="{{.Value}}" {{ if eq .Value $.province}}selected{{end}}>{{.Name}}</option>
-    {{ end }}
-    </select>
-{{ else }}
-<input type="hidden" name="province">
-{{ end }}
+        <select class="filter-select" name="period">
+            {{ range .periodOptions}}
+                <option value="{{.Value}}" {{ if eq .Value $.period}}selected{{end}}>{{.Name}}</option>
+            {{ end }}
+        </select>
+    </form>
 
-<select class="filter-select" name="period">
-{{ range .periodOptions}}
-<option value="{{.Value}}" {{ if eq .Value $.period}}selected{{end}}>{{.Name}}</option>
-{{ end }}
-</select>
+    <div class="chart_container">
+        <canvas class="chart" id="chartDeceased" ></canvas>
+    </div>
+    <div class="chart_container">
+        <canvas class="chart" id="chartConfirmed" ></canvas>
+    </div>
+    <div class="chart_container">
+        <canvas class="chart" id="chartRecovered" ></canvas>
+    </div>
+    <div style="clear:both;"></div>
+    </article>
 
-</form>
+    <footer>
+        <p>Data from <a href="https://github.com/CSSEGISandData/COVID-19">Johns Hopkins University</a>, updated daily. Code on <a href="https://github.com/kennygrant/coronavirus">Github</a>. Hosted on Digital Ocean.</p>
+    </footer>
 
-
-
-
-
-<div class="chart_container">
-<canvas class="chart" id="chartDeceased" ></canvas>
-<canvas class="chart" id="chartConfirmed" ></canvas>
-<canvas class="chart" id="chartRecovered" ></canvas>
-</div>
 
 <script>
 
@@ -233,7 +243,6 @@ for (i = 0; i < filters.length; i++) {
 
     })
 }
-
 
 </script>
 </body>
