@@ -139,21 +139,27 @@ func (s *Series) RecoveredDisplay() string {
 }
 
 // TotalDeaths returns the cumulative death due to COVID-19 for this series
-// (the last entry)
 func (s *Series) TotalDeaths() int {
-	return s.Deaths[len(s.Deaths)-1]
+	if len(s.Deaths) == 1 || len(s.Deaths) > 60 {
+		return s.Deaths[len(s.Deaths)-1]
+	}
+	return s.Deaths[len(s.Deaths)-1] - s.Deaths[0]
 }
 
 // TotalConfirmed returns the cumulative confirmed cases of COVID-19 for this series
-// (the last entry)
 func (s *Series) TotalConfirmed() int {
-	return s.Confirmed[len(s.Confirmed)-1]
+	if len(s.Confirmed) == 1 || len(s.Confirmed) > 60 {
+		return s.Confirmed[len(s.Confirmed)-1]
+	}
+	return s.Confirmed[len(s.Confirmed)-1] - s.Confirmed[0]
 }
 
 // TotalRecovered returns the cumulative confirmed cases of COVID-19 for this series
-// (the last entry)
 func (s *Series) TotalRecovered() int {
-	return s.Recovered[len(s.Recovered)-1]
+	if len(s.Recovered) == 1 || len(s.Recovered) > 60 {
+		return s.Recovered[len(s.Recovered)-1]
+	}
+	return s.Recovered[len(s.Recovered)-1] - s.Recovered[0]
 }
 
 // Days returns a copy of this series for just the given number of days in the past
@@ -221,6 +227,9 @@ type Option struct {
 func (slice SeriesSlice) PeriodOptions() (options []Option) {
 
 	options = append(options, Option{Name: "All Time", Value: "0"})
+	options = append(options, Option{Name: "1 Day", Value: "1"})
+	options = append(options, Option{Name: "2 Days", Value: "2"})
+	options = append(options, Option{Name: "3 Days", Value: "3"})
 	options = append(options, Option{Name: "7 Days", Value: "7"})
 	options = append(options, Option{Name: "14 Days", Value: "14"})
 	options = append(options, Option{Name: "28 Days", Value: "28"})
