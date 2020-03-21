@@ -1,0 +1,191 @@
+<html>
+<head>
+<link rel="icon" type="image/png" href="sarscov2.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.css">
+
+
+</head>
+
+<style>
+    html {
+        background:#fff;
+        color:#333;
+        font:1.1em/1.5em "Open Sans", sans-serif;
+    }
+    h1 {
+        font-weight:100;
+        text-align:center;
+        padding:0.5rem;
+        margin:0;
+    }
+    .chart {
+        margin-bottom:1rem;
+    }
+    .filters {
+        padding:0.5rem 1rem;
+        margin:0 auto;
+        text-align:center;
+    }
+    select {
+        position:relative;
+        margin: 0;
+        padding: 0.25rem 1rem;
+        font-size: 0.8em;
+        border: none;
+        border-radius:0.1rem;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        z-index:9999;
+    }
+    
+    .chart_container {
+        position: relative;
+        height:28vh;
+    }
+
+
+    @media (min-width: 800px) {
+       
+    }
+
+</style>
+
+<body>
+<div class="ground"></div>
+
+<h1><span id="chart_title">{{.series.Title}}</span> Coronavirus Cases</h1>
+
+<form class="filters">
+<select>
+{{ range .countryOptions}}
+<option value="{{.Value}}">{{.Name}}</option>
+{{ end }}
+</select>
+
+<select>
+{{ range .provinceOptions}}
+<option value="{{.Value}}">{{.Name}}</option>
+{{ end }}
+</select>
+
+<select>
+<option value="0">All Time</option>
+<option value="7">7 Days</option>
+<option value="30">30 Days</option>
+</select>
+</form>
+
+
+
+<div class="chart_container">
+<canvas class="chart" id="chartDeceased" ></canvas>
+<canvas class="chart" id="chartConfirmed" ></canvas>
+<canvas class="chart" id="chartRecovered" ></canvas>
+</div>
+
+<script>
+
+var chartOptions = {
+    scales: {
+         xAxes: [{
+            ticks: {
+                autoSkip: true,
+                maxTicksLimit: 30
+            },
+            gridLines: {
+                color:"rgba(255, 255, 255,0)",
+                lineWidth: 0
+            }
+         }],
+         yAxes: [{
+           position: "right",
+            ticks: {
+                autoSkip: true,
+                maxTicksLimit: 5,
+                callback: function(value, index, values) {
+                    if (value >= 1000) {
+                        return value / 1000 + 'k';
+                    }
+                    return value;
+                }
+            },
+            gridLines: {
+                color:"rgba(230, 230, 230,0.5)",
+                lineWidth: 1
+            }
+         }]
+    },
+    legend:{
+        position:"bottom",
+        labels:{"usePointStyle":true,"boxWidth":4}
+    },
+    maintainAspectRatio:false
+}
+
+var chartDeceasedData = {
+    "labels":{{.series.Dates}},
+    "datasets":[{
+        "label":"COVID-19 Deaths",
+        "data":{{.series.Deaths}},
+        "fill":true,
+        "borderWidth":"0",
+        "backgroundColor":"rgb(30, 30, 30,0.8)",
+        "lineTension":0.1
+        }]
+}
+
+var chartDeceasedCtx = document.getElementById('chartDeceased').getContext('2d');
+var chartDeceased = new Chart(chartDeceasedCtx, {
+    type: 'line',
+    options: chartOptions,
+    data: chartDeceasedData
+});
+
+
+
+var chartConfirmedData = {
+      "labels":{{.series.Dates}},
+      "datasets":[{
+        "label":"COVID-19 Confirmed",
+        "data":{{.series.Confirmed}},
+        "fill":true,
+         "borderWidth":"0",
+        "backgroundColor":"rgb(163,32,32,0.8)",
+        "lineTension":0.1
+        }]
+}
+
+var chartConfirmedCtx = document.getElementById('chartConfirmed').getContext('2d');
+var chartConfirmed = new Chart(chartConfirmedCtx, {
+    type: 'line',
+    options: chartOptions,
+    data: chartConfirmedData
+});
+
+
+var chartRecoveredData = {
+      "labels":{{.series.Dates}},
+      "datasets":[{
+        "label":"COVID-19 Recovered",
+        "data":{{.series.Recovered}},
+        "fill":true,
+        "borderWidth":"0",
+        "backgroundColor":"rgb(54,128,45,0.8)",
+        "lineTension":0.1
+        }]
+}
+
+var chartRecoveredCtx = document.getElementById('chartRecovered').getContext('2d');
+var chartRecovered = new Chart(chartRecoveredCtx, {
+    type: 'line',
+    options: chartOptions,
+    data: chartRecoveredData
+});
+
+
+
+</script>
+</body>
+</html>

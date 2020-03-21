@@ -20,7 +20,7 @@ type Series struct {
 	Country string
 	// The Province or State - may be blank for countries
 	Province string
-	// The date at which the series starts
+	// The date at which the series starts - all datasets must be the same length
 	StartsAt time.Time
 	// Total Deaths, Confirmed or Recovered by day (cumulative)
 	Deaths    []int
@@ -37,6 +37,17 @@ func (s *Series) Title() string {
 	}
 
 	return fmt.Sprintf("%s > %s", s.Country, s.Province)
+}
+
+// Dates returns a set of date labels as an array of strings
+// for every datapoint in this series
+func (s *Series) Dates() (dates []string) {
+	d := s.StartsAt
+	for range s.Deaths {
+		dates = append(dates, d.Format("Jan 2"))
+		d = d.AddDate(0, 0, 1)
+	}
+	return dates
 }
 
 // FetchDate retusn the data for the given data from datum
@@ -145,6 +156,42 @@ func (slice SeriesSlice) FetchSeries(country string, province string) (*Series, 
 	}
 
 	return &Series{}, fmt.Errorf("series: not found")
+}
+
+// Option is used to generate options for selects in the view
+type Option struct {
+	Name  string
+	Value string
+}
+
+// CountryOptions returns a set of options for the country dropdown (including a global one)
+func (slice SeriesSlice) CountryOptions() (options []Option) {
+
+	options = append(options, Option{Name: "Global", Value: ""})
+
+	for _, s := range slice {
+		if s.Province == "" && s.Country != "" {
+			options = append(options, Option{Name: s.Country, Value: s.Country})
+		}
+	}
+
+	return options
+}
+
+// ProvinceOptions returns a set of options for the province dropdown
+// this should probably be based on the current country selection, and filtered from there
+// to avoid inconsistency
+// for now just show all which have province filled in.
+func (slice SeriesSlice) ProvinceOptions(country string) (options []Option) {
+
+	// TODO - filter on country here always
+	for _, s := range slice {
+		if s.Province != "" {
+			options = append(options, Option{Name: s.Province, Value: s.Province})
+		}
+	}
+
+	return options
 }
 
 // MergeCSV merges the data in this CSV with data

@@ -1,8 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"io"
+	"html/template"
 	"log"
 	"net/http"
 	"path"
@@ -62,13 +61,29 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("request: country:%s province:%s", country, province)
 
-	template := `<html><body><h1>%s</h1><p>Deaths:%v</p><p>Confirmed:%v</p><p>Recovered:%v</p></body></html>`
+	// Read the template from our local file and render
+	tmpl, err := template.ParseFiles("layout.html.got")
+	if err != nil {
+		log.Printf("template error:%s", err)
+		http.Error(w, err.Error(), 500)
+	}
 
-	response := fmt.Sprintf(template, series.Title(), series.Deaths, series.Confirmed, series.Recovered)
+	// Set up context with data
+	context := map[string]interface{}{
+		"series":          series,
+		"countryOptions":  data.CountryOptions(),
+		"provinceOptions": data.ProvinceOptions(""),
+	}
 
+	// Render the template
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(200)
-	io.WriteString(w, response)
+	err = tmpl.Execute(w, context)
+	if err != nil {
+		log.Printf("template render error:%s", err)
+		http.Error(w, err.Error(), 500)
+	}
+
 }
 
 // parseURL parses the parts of the url path (if any)
