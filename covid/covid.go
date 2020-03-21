@@ -80,10 +80,15 @@ func (s *Series) Valid() bool {
 	return !s.StartsAt.IsZero()
 }
 
+// Key converts a value into one suitable for use in urls
+func (s *Series) Key(v string) string {
+	return strings.Replace(strings.ToLower(v), " ", "-", -1)
+}
+
 // Match returns true if this series matches data from a row
 // performs a case insensitive match
 func (s *Series) Match(country string, province string) bool {
-	return strings.ToLower(s.Country) == strings.ToLower(country) && strings.ToLower(s.Province) == strings.ToLower(province)
+	return s.Key(s.Country) == s.Key(country) && s.Key(s.Province) == s.Key(province)
 }
 
 // Merge the data from the incoming series with ours
@@ -109,6 +114,32 @@ func (s *Series) Merge(series *Series) {
 	}
 }
 
+// Format formats a given number for display and returns a string
+func (s *Series) Format(i int) string {
+	if i < 1000 {
+		return fmt.Sprintf("%d", i)
+	}
+	if i < 1000000 {
+		return fmt.Sprintf("%.2fk", float64(i)/1000)
+	}
+	return fmt.Sprintf("%.2fm", float64(i)/1000000)
+}
+
+// DeathsDisplay returns a string representation of TotalDeaths
+func (s *Series) DeathsDisplay() string {
+	return s.Format(s.TotalDeaths())
+}
+
+// ConfirmedDisplay returns a string representation of TotalConfirmed
+func (s *Series) ConfirmedDisplay() string {
+	return s.Format(s.TotalConfirmed())
+}
+
+// RecoveredDisplay returns a string representation of TotalRecovered
+func (s *Series) RecoveredDisplay() string {
+	return s.Format(s.TotalRecovered())
+}
+
 // TotalDeaths returns the cumulative death due to COVID-19 for this series
 // (the last entry)
 func (s *Series) TotalDeaths() int {
@@ -125,6 +156,19 @@ func (s *Series) TotalConfirmed() int {
 // (the last entry)
 func (s *Series) TotalRecovered() int {
 	return s.Recovered[len(s.Recovered)-1]
+}
+
+// Days returns a copy of this series for just the given number of days in the past
+func (s *Series) Days(days int) *Series {
+	i := len(s.Deaths) - days
+	return &Series{
+		Country:   s.Country,
+		Province:  s.Province,
+		StartsAt:  s.StartsAt.AddDate(0, 0, days),
+		Deaths:    s.Deaths[i:],
+		Confirmed: s.Confirmed[i:],
+		Recovered: s.Recovered[i:],
+	}
 }
 
 // SLICE OF Series
@@ -164,6 +208,16 @@ type Option struct {
 	Value string
 }
 
+// PeriodOptions returns a set of options for period filters
+func (slice SeriesSlice) PeriodOptions() (options []Option) {
+
+	options = append(options, Option{Name: "All Time", Value: "0"})
+	options = append(options, Option{Name: "7 Days", Value: "7"})
+	options = append(options, Option{Name: "30 Days", Value: "30"})
+
+	return options
+}
+
 // CountryOptions returns a set of options for the country dropdown (including a global one)
 func (slice SeriesSlice) CountryOptions() (options []Option) {
 
@@ -171,7 +225,7 @@ func (slice SeriesSlice) CountryOptions() (options []Option) {
 
 	for _, s := range slice {
 		if s.Province == "" && s.Country != "" {
-			options = append(options, Option{Name: s.Country, Value: s.Country})
+			options = append(options, Option{Name: s.Country, Value: s.Key(s.Country)})
 		}
 	}
 
@@ -187,7 +241,7 @@ func (slice SeriesSlice) ProvinceOptions(country string) (options []Option) {
 	// TODO - filter on country here always
 	for _, s := range slice {
 		if s.Province != "" {
-			options = append(options, Option{Name: s.Province, Value: s.Province})
+			options = append(options, Option{Name: s.Province, Value: s.Key(s.Province)})
 		}
 	}
 

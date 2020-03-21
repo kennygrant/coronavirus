@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -50,7 +51,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	log.Printf("request:%s", r.URL)
 
 	// Get the parameters from the url
-	country, province := parseURL(r.URL.Path)
+	country, province, period := parseParams(r)
 
 	// Fetch the series concerned - if both are blank we'll get the global series
 	series, err := data.FetchSeries(country, province)
@@ -59,7 +60,12 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("request: country:%s province:%s", country, province)
+	// Limit by period if necessary
+	if period > 0 {
+		series = series.Days(period)
+	}
+
+	log.Printf("request: country:%s province:%s period:%d", country, province, period)
 
 	// Read the template from our local file and render
 	tmpl, err := template.ParseFiles("layout.html.got")
@@ -70,7 +76,11 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 
 	// Set up context with data
 	context := map[string]interface{}{
+		"period":          strconv.Itoa(period),
+		"country":         series.Key(series.Country),
+		"province":        series.Key(series.Province),
 		"series":          series,
+		"periodOptions":   data.PeriodOptions(),
 		"countryOptions":  data.CountryOptions(),
 		"provinceOptions": data.ProvinceOptions(""),
 	}
@@ -86,10 +96,11 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// parseURL parses the parts of the url path (if any)
-// it may return two empty strings if there is no path
-func parseURL(path string) (country, province string) {
-	parts := strings.Split(strings.Trim(path, "/"), "/")
+// parseParams parses the parts of the url path (if any) and params
+func parseParams(r *http.Request) (country, province string, period int) {
+
+	// Parse the path
+	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 
 	if len(parts) > 0 {
 		country = parts[0]
@@ -98,12 +109,30 @@ func parseURL(path string) (country, province string) {
 		province = parts[1]
 	}
 
+	// Add query string params from request  - accept all params this way
+	queryParams := r.URL.Query()
+	if len(queryParams["period"]) > 0 {
+		var err error
+		periodString := queryParams["period"][0]
+		period, err = strconv.Atoi(periodString)
+		if err != nil {
+			period = 0
+		}
+	}
+	if len(queryParams["country"]) > 0 {
+		country = queryParams["country"][0]
+	}
+
+	if len(queryParams["province"]) > 0 {
+		province = queryParams["province"][0]
+	}
+
 	// Allow some abreviations for urls
 	if country == "uk" {
 		country = "United Kingdom"
 	}
 
-	return country, province
+	return country, province, period
 }
 
 // handleFile shows a file (if it exists)
