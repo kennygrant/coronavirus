@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kennygrant/covid-19/covid"
+	"github.com/kennygrant/coronavirus/covid"
 )
 
 // Store our data globally, don't touch it after server start

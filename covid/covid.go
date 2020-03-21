@@ -125,16 +125,25 @@ func (s *Series) Format(i int) string {
 
 // DeathsDisplay returns a string representation of TotalDeaths
 func (s *Series) DeathsDisplay() string {
+	if len(s.Deaths) == 1 {
+		return ""
+	}
 	return s.Format(s.TotalDeaths())
 }
 
 // ConfirmedDisplay returns a string representation of TotalConfirmed
 func (s *Series) ConfirmedDisplay() string {
+	if len(s.Confirmed) == 1 {
+		return ""
+	}
 	return s.Format(s.TotalConfirmed())
 }
 
 // RecoveredDisplay returns a string representation of TotalRecovered
 func (s *Series) RecoveredDisplay() string {
+	if len(s.Recovered) == 1 {
+		return ""
+	}
 	return s.Format(s.TotalRecovered())
 }
 
