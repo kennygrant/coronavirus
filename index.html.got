@@ -110,6 +110,8 @@
         </select>
     </form>
 
+
+
     <div class="chart_container">
         <canvas class="chart" id="chartDeceased" ></canvas>
     </div>
@@ -117,10 +119,16 @@
         <canvas class="chart" id="chartConfirmed" ></canvas>
     </div>
     <div class="chart_container">
+        <canvas class="chart" id="chartDaily" ></canvas>
+    </div>
+    <div class="chart_container">
         <canvas class="chart" id="chartRecovered" ></canvas>
     </div>
-    <div style="clear:both;"></div>
+
+
     </article>
+
+
 
     <footer>
         <p>Data from <a href="https://github.com/CSSEGISandData/COVID-19">Johns Hopkins University</a>, updated daily. Code on <a href="https://github.com/kennygrant/coronavirus">Github</a>. Hosted on Digital Ocean.</p>
@@ -226,6 +234,27 @@ var chartConfirmed = new Chart(chartConfirmedCtx, {
 });
 
 
+var chartDailyData = {
+      "labels":{{.series.Dates}},
+      "datasets":[{
+        "label":"COVID-19 Confirmed Daily Counts",
+        "data":{{.series.ConfirmedDaily}},
+        "fill":true,
+        "borderWidth":"0",
+        "backgroundColor":"rgb(163,32,32,0.5)",
+        "lineTension":0.1
+        }]
+}
+
+var chartDailyCtx = document.getElementById('chartDaily').getContext('2d');
+chartOptions.title.text = "{{.series.ConfirmedLastDisplay}} Daily Confirmed";
+var chartRecovered = new Chart(chartDailyCtx, {
+    type: 'bar',
+    options: chartOptions,
+    data: chartDailyData
+});
+
+
 var chartRecoveredData = {
       "labels":{{.series.Dates}},
       "datasets":[{
@@ -245,6 +274,8 @@ var chartRecovered = new Chart(chartRecoveredCtx, {
     options: chartOptions,
     data: chartRecoveredData
 });
+
+
 
 
 
