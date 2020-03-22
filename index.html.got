@@ -3,19 +3,20 @@
 <link rel="icon" type="image/png" href="favicon.ico">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.css">
-
-
-</head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-5382112-9"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-5382112-9');
+</script>
 
 <style>
-
-
     html {
         background:#fff;
         color:#333;
         font:1.1em/1.8em "Open Sans", sans-serif;
     }
-
     h1 {
         font-weight:100;
         text-align:center;
@@ -23,15 +24,11 @@
         margin:0;
         font-size:2.5em;
     }
-
-
-
     .filters {
         padding:0.5rem 1rem;
         margin:0 auto;
         text-align:center;
     }
-
     select {
         position:relative;
         margin: 0;
@@ -45,23 +42,19 @@
         appearance: none;
         z-index:9999;
     }
-    
     .chart {
         margin-top:0.5rem;
     }
-
     .chart_container {
         position: relative;
         height:26vh;
     }
-
     footer {
         display:block;
         clear:both;
         text-align:center;
         font-size:0.6em;
     }
-
     @media(max-width:1200px) {
         h1 {
             font:3em/1.2em "Open Sans", sans-serif;
@@ -82,8 +75,9 @@
            margin-top:2.5rem;
          }
     }
-
 </style>
+
+</head>
 
 <body>
 
