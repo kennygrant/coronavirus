@@ -37,6 +37,14 @@ func main() {
 	// Schedule a regular fetch of data at a specified time daily
 	covid.ScheduleDataFetch()
 
+	/*
+		// For testing, test a fetch instead
+		err := covid.FetchData()
+		if err != nil {
+			log.Fatalf("server: failed to load data:%s", err)
+		}
+	*/
+
 	// Load the data
 	err := covid.LoadData()
 	if err != nil {

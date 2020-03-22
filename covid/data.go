@@ -181,8 +181,8 @@ func processData(data SeriesSlice) SeriesSlice {
 	log.Printf("Added Global Series:%s %s %v", Global.Country, Global.Province, Global.Deaths)
 	data = append(data, Global)
 
-	// Sort the data alphabetically by country and then province
-	sort.Sort(data)
+	// Sort the data by deaths, then alphabetically by country
+	sort.Stable(data)
 
 	// TODO - should we sum data for countries like UK, to include dependencies for consistency?
 	// the original dataset has some like China done this way, but others like UK seem to not. Check data.
@@ -223,6 +223,9 @@ func FetchData() error {
 		return err
 	}
 
+	// Allow a pause after requests to save data to disk
+	time.Sleep(1 * time.Second)
+
 	// Trigger a reload of the data from our standard data path
 	return LoadData()
 }
@@ -259,6 +262,8 @@ func DownloadFiles(urls []string, dataPath string) error {
 			return fmt.Errorf("data: error copying data url:%s path:%s error:%s", url, path, err)
 		}
 
+		// Allow a pause between requests
+		time.Sleep(1 * time.Second)
 	}
 	return nil
 }

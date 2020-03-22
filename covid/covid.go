@@ -156,7 +156,7 @@ func (s *Series) RecoveredDisplay() string {
 
 // TotalDeaths returns the cumulative death due to COVID-19 for this series
 func (s *Series) TotalDeaths() int {
-	if len(s.Deaths) == 1 || len(s.Deaths) > 60 {
+	if len(s.Deaths) > 60 {
 		return s.Deaths[len(s.Deaths)-1]
 	}
 	return s.Deaths[len(s.Deaths)-1] - s.Deaths[0]
@@ -164,7 +164,7 @@ func (s *Series) TotalDeaths() int {
 
 // TotalConfirmed returns the cumulative confirmed cases of COVID-19 for this series
 func (s *Series) TotalConfirmed() int {
-	if len(s.Confirmed) == 1 || len(s.Confirmed) > 60 {
+	if len(s.Confirmed) > 60 {
 		return s.Confirmed[len(s.Confirmed)-1]
 	}
 	return s.Confirmed[len(s.Confirmed)-1] - s.Confirmed[0]
@@ -172,7 +172,7 @@ func (s *Series) TotalConfirmed() int {
 
 // TotalRecovered returns the cumulative confirmed cases of COVID-19 for this series
 func (s *Series) TotalRecovered() int {
-	if len(s.Recovered) == 1 || len(s.Recovered) > 60 {
+	if len(s.Recovered) > 60 {
 		return s.Recovered[len(s.Recovered)-1]
 	}
 	return s.Recovered[len(s.Recovered)-1] - s.Recovered[0]
@@ -201,7 +201,7 @@ func (slice SeriesSlice) Swap(i, j int) { slice[i], slice[j] = slice[j], slice[i
 
 // Sort first on number of deaths, then on alpha order
 func (slice SeriesSlice) Less(i, j int) bool {
-	if slice[i].TotalDeaths() > 0 {
+	if slice[i].TotalDeaths() > 0 || slice[j].TotalDeaths() > 0 {
 		return slice[i].TotalDeaths() > slice[j].TotalDeaths()
 	}
 	return slice[i].Country < slice[j].Country
