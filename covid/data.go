@@ -18,6 +18,8 @@ var dataFiles = []string{
 	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv",
 	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv",
 	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv",
+	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/web-data/data/cases_state.csv",
+	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/web-data/data/cases_country.csv",
 }
 
 // LoadData the data from the CSV files in our data dir
@@ -38,16 +40,33 @@ func LoadData() error {
 	// Need to clear previous data in case we are reloading
 	data = SeriesSlice{}
 
-	// Load all our data files
+	// Load all our time series data files - must be loaded and processed first
 	for _, fp := range files {
-		data, err = loadCSVFile(fp, data)
-		if err != nil {
-			return err
+		name := filepath.Base(fp)
+		if strings.HasPrefix(name, "time_series") {
+			data, err = loadCSVFile(fp, data)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	// Post-process the data after loading (it doesn't include global US counts for example)
+	// Process the data after loading (it doesn't include global US counts for example)
 	data = processData(data)
+
+	// Load all our daily data files - must be loaded after main series are inserted for countries
+	for _, fp := range files {
+		name := filepath.Base(fp)
+		if strings.HasPrefix(name, "cases_") {
+			data, err = loadCSVFile(fp, data)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Now we need to update the series counts for certain top-level entries added above
+	//	updateFinalSeriesCounts(data)
 
 	log.Printf("server: loaded data in %s len:%d", time.Now().Sub(start), len(data))
 
@@ -77,15 +96,18 @@ func loadCSVFile(path string, data SeriesSlice) (SeriesSlice, error) {
 		dataType = DataConfirmed
 	} else if strings.HasSuffix(path, "Recovered.csv") {
 		dataType = DataRecovered
+	} else if strings.HasSuffix(path, "cases_state.csv") {
+		dataType = DataTodayState
+	} else if strings.HasSuffix(path, "cases_country.csv") {
+		dataType = DataTodayCountry
 	}
 
 	return data.MergeCSV(csvData, dataType)
 }
 
 // processData post-processes the data
-// at present it just adds a series for the entire US
-// based on all state-level US data
-// call via LoadData above
+// adds a global data series
+// adds some country level data series which are missing
 func processData(data SeriesSlice) SeriesSlice {
 
 	// Set all series with a province matching country to blank province instead
@@ -95,6 +117,17 @@ func processData(data SeriesSlice) SeriesSlice {
 		if s.Province == s.Country {
 			s.Province = ""
 		}
+		// Fix country names - inconsistent between all data sets!
+		if s.Country == "The Bahamas" || s.Country == "Bahamas, The" {
+			s.Country = "Bahamas"
+		}
+		if s.Country == "The Gambia" || s.Country == "Gambia, The" {
+			s.Country = "Gambia"
+		}
+		if s.Country == "East Timor" {
+			s.Country = "Timor-Leste"
+		}
+
 	}
 
 	// Generate extra series not include in the data
@@ -188,6 +221,32 @@ func processData(data SeriesSlice) SeriesSlice {
 	// the original dataset has some like China done this way, but others like UK seem to not. Check data.
 
 	return data
+}
+
+// updateFinalSeriesCounts adds the last day of global data now that we have other data
+func updateFinalSeriesCounts(data SeriesSlice) {
+
+	global, err := data.FetchSeries("", "")
+	if err != nil {
+		log.Printf("err:%s", err)
+		return
+	}
+
+	// Add a blank day to global
+	global.Deaths = append(global.Deaths, 0)
+	global.Confirmed = append(global.Confirmed, 0)
+	global.Recovered = append(global.Recovered, 0)
+	global.ConfirmedDaily = append(global.ConfirmedDaily, 0)
+
+	// Add global country entries for countries with data broken down at province level
+	// Add a global dataset from all other datasets combined
+	for _, s := range data {
+		// Add final day for each series to global totals
+		if !s.Global() {
+			global.MergeFinalDay(s)
+		}
+	}
+
 }
 
 // ScheduleDataFetch sets up a regular fetch of data from data sources

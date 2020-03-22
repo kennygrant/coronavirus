@@ -2,6 +2,7 @@ package covid
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -19,10 +20,14 @@ const (
 	DataDeaths = iota
 	DataConfirmed
 	DataRecovered
+	DataTodayState
+	DataTodayCountry
 )
 
 // Series stores data for one country or province within a country
 type Series struct {
+	// UTCE Date data last updated
+	UpdatedAt time.Time
 	// The Country or Region
 	Country string
 	// The Province or State - may be blank for countries
@@ -135,6 +140,26 @@ func (s *Series) Merge(series *Series) {
 
 }
 
+// MergeFinalDay merges the final day of data
+func (s *Series) MergeFinalDay(series *Series) error {
+	if len(series.Confirmed) != len(s.Confirmed) {
+		return fmt.Errorf("series: mismatch in days length for:%s", s.Country)
+	}
+	i := len(s.Confirmed) - 1
+
+	s.Confirmed[i] += series.Confirmed[i]
+	s.Deaths[i] += series.Deaths[i]
+	s.Recovered[i] += series.Recovered[i]
+	s.ConfirmedDaily[i] += series.ConfirmedDaily[i]
+
+	return nil
+}
+
+// Global returns true if this is the global series
+func (s *Series) Global() bool {
+	return s.Country == "" && s.Province == ""
+}
+
 // Format formats a given number for display and returns a string
 func (s *Series) Format(i int) string {
 	if i < 1000 {
@@ -224,6 +249,37 @@ func (s *Series) Days(days int) *Series {
 		Recovered:      s.Recovered[i:],
 		ConfirmedDaily: s.ConfirmedDaily[i:],
 	}
+}
+
+// UpdateConfirmedDaily updates the confirmed daily based on a new set of values for Confirmed
+func (s *Series) UpdateConfirmedDaily() {
+	s.ConfirmedDaily = make([]int, len(s.Confirmed))
+	for i := range s.Confirmed {
+		if i == 0 {
+			s.ConfirmedDaily[i] = s.Confirmed[i]
+		} else {
+			s.ConfirmedDaily[i] = s.Confirmed[i] - s.Confirmed[i-1]
+		}
+	}
+}
+
+// AddDayData sets the data at dayIndex to the supplied data
+// if necessary a day will be added
+func (s *Series) AddDayData(dayIndex int, updated time.Time, confirmed, deaths, recovered int) {
+	s.UpdatedAt = updated
+
+	if dayIndex > len(s.Deaths)-1 {
+		//	fmt.Printf("dayIndex:%d %d\n", dayIndex, len(s.Deaths))
+		s.Deaths = append(s.Deaths, deaths)
+		s.Confirmed = append(s.Confirmed, confirmed)
+		s.Recovered = append(s.Recovered, recovered)
+	} else {
+		//	fmt.Printf("dayIndex exists:%d %d\n", dayIndex, len(s.Deaths))
+		s.Deaths[dayIndex] = deaths
+		s.Confirmed[dayIndex] = confirmed
+		s.Recovered[dayIndex] = recovered
+	}
+
 }
 
 // SLICE OF Series
@@ -339,8 +395,24 @@ func (slice SeriesSlice) ProvinceOptions(country string) (options []Option) {
 	return options
 }
 
-// MergeCSV merges the data in this CSV with data
+// MergeCSV merges the data in this CSV with the data we already have in the SeriesSlice
 func (slice SeriesSlice) MergeCSV(records [][]string, dataType int) (SeriesSlice, error) {
+
+	// If daily data, merge it to existing last date
+	switch dataType {
+	case DataTodayCountry:
+		log.Printf(" country")
+		return slice.mergeDailyCountryCSV(records, dataType)
+	case DataTodayState:
+		log.Printf(" state")
+		return slice.mergeDailyStateCSV(records, dataType)
+	}
+
+	return slice.mergeTimeSeriesCSV(records, dataType)
+}
+
+// mergeTimeSeriesCSV merges the data in this time series CSV with the data we already have in the SeriesSlice
+func (slice SeriesSlice) mergeTimeSeriesCSV(records [][]string, dataType int) (SeriesSlice, error) {
 
 	// Make an assumption about the starting date (checked below on header row)
 	startDate := time.Date(2020, 1, 22, 0, 0, 0, 0, time.UTC)
@@ -350,7 +422,7 @@ func (slice SeriesSlice) MergeCSV(records [][]string, dataType int) (SeriesSlice
 		if i == 0 {
 			// We just check a few cols - we assume the start date of the data won't change
 			if row[0] != "Province/State" || row[1] != "Country/Region" || row[2] != "Lat" || row[4] != "1/22/20" {
-				return slice, fmt.Errorf("load: error loading file - csv data format invalid")
+				return slice, fmt.Errorf("load: error loading file - time series csv data format invalid")
 			}
 
 		} else {
@@ -401,17 +473,195 @@ func (slice SeriesSlice) MergeCSV(records [][]string, dataType int) (SeriesSlice
 
 			// After reading row data, calculate confirmed daily from confirmed
 			// first day is just set to first total after that daily totals are stored
-			series.ConfirmedDaily = make([]int, len(series.Confirmed))
-			for i := range series.Confirmed {
-				if i == 0 {
-					series.ConfirmedDaily[i] = series.Confirmed[i]
-				} else {
-					series.ConfirmedDaily[i] = series.Confirmed[i] - series.Confirmed[i-1]
-				}
-			}
+			series.UpdateConfirmedDaily()
 
 		}
 
 	}
 	return slice, nil
+}
+
+// mergeDailyCountryCSV merges the data in this country daily series CSV with the data we already have in the SeriesSlice
+func (slice SeriesSlice) mergeDailyCountryCSV(records [][]string, dataType int) (SeriesSlice, error) {
+
+	log.Printf("load: merge daily country csv")
+
+	// Make an assumption about the starting date - if this changes update
+	startDate := time.Date(2020, 1, 22, 0, 0, 0, 0, time.UTC)
+
+	// Calculate index in series given shared StartsAt vs today (we assume data in these files is for today)
+	days := time.Now().UTC().Sub(startDate)
+	dayIndex := int(days.Hours() / 24)
+
+	// Bounds check index
+	if dayIndex < 0 {
+		return nil, fmt.Errorf("day index out of bounds")
+	}
+
+	for i, row := range records {
+		// Check header to see this is the file we expect, if not skip
+		if i == 0 {
+			//Country_Region,Last_Update,Lat,Long_,Confirmed,Deaths,Recovered,Active
+			// We just check a few cols - we assume the start date of the data won't change
+			if row[0] != "Country_Region" || row[1] != "Last_Update" || row[2] != "Lat" || row[4] != "Confirmed" {
+				return slice, fmt.Errorf("load: error loading file - daily country csv data format invalid")
+			}
+
+		} else {
+
+			// Fetch data to match series
+			country := row[0]
+			province := ""
+
+			// There are several province series with bad names or dates which are duplicated in the state level dataset
+			// we therefore ignore them here as the data seems to be out of date anyway
+
+			// Fetch the series
+			series, err := slice.FetchSeries(country, province)
+			if err != nil {
+				log.Printf("load: warning reading daily series:%s error:%s", row[0], err)
+				//return nil, fmt.Errorf("load: error reading daily series:%s error:%s", row[0], err)
+			}
+
+			// Get the series data from the row
+			updated, confirmed, deaths, recovered, err := readCountryRow(row)
+			if err != nil {
+				return nil, fmt.Errorf("load: error reading row series:%s error:%s", row[0], err)
+			}
+
+			series.AddDayData(dayIndex, updated, confirmed, deaths, recovered)
+
+			// After reading row data, recalculate confirmed daily from confirmed
+			// first day is just set to first total after that daily totals are stored
+			series.UpdateConfirmedDaily()
+		}
+
+	}
+	return slice, nil
+}
+
+func readCountryRow(row []string) (time.Time, int, int, int, error) {
+
+	// Dates are, remarkably, in two different formats in one file
+	// Try first in the one true format
+	updated, err := time.Parse("2006-01-02 15:04:05", row[1])
+	if err != nil {
+		// Then try the US format  3/13/2020 22:22
+		updated, err = time.Parse("1/2/2006 15:04", row[1])
+		if err != nil {
+			return updated, 0, 0, 0, fmt.Errorf("load: error reading updated at series:%s error:%s", row[0], err)
+		}
+	}
+
+	confirmed, err := strconv.Atoi(row[4])
+	if err != nil {
+		return updated, 0, 0, 0, fmt.Errorf("load: error reading confirmed series:%s error:%s", row[0], err)
+	}
+
+	deaths, err := strconv.Atoi(row[5])
+	if err != nil {
+		return updated, 0, 0, 0, fmt.Errorf("load: error reading deaths series:%s error:%s", row[0], err)
+	}
+
+	recovered, err := strconv.Atoi(row[6])
+	if err != nil {
+		return updated, 0, 0, 0, fmt.Errorf("load: error reading recovered series:%s error:%s", row[0], err)
+	}
+
+	return updated, confirmed, deaths, recovered, nil
+}
+
+// mergeDailyStateCSV merges the data in this state daily series CSV with the data we already have in the SeriesSlice
+func (slice SeriesSlice) mergeDailyStateCSV(records [][]string, dataType int) (SeriesSlice, error) {
+
+	log.Printf("load: merge daily state csv")
+
+	// Make an assumption about the starting date - if this changes update
+	startDate := time.Date(2020, 1, 22, 0, 0, 0, 0, time.UTC)
+
+	// Calculate index in series given shared StartsAt vs today (we assume data in these files is for today)
+	days := time.Now().UTC().Sub(startDate)
+	dayIndex := int(days.Hours() / 24)
+
+	// Bounds check index
+	if dayIndex < 0 {
+		return nil, fmt.Errorf("day index out of bounds")
+	}
+
+	for i, row := range records {
+		// Check header to see this is the file we expect, if not skip
+		if i == 0 {
+			//FIPS,Province_State,Country_Region,Last_Update,Lat,Long_,Confirmed,Deaths,Recovered,Active
+			// We just check a few cols - we assume the start date of the data won't change
+			if row[0] != "FIPS" || row[1] != "Province_State" || row[2] != "Country_Region" || row[6] != "Confirmed" {
+				return slice, fmt.Errorf("load: error loading file - daily country csv data format invalid")
+			}
+
+		} else {
+
+			// Fetch data to match series
+			country := row[2]
+			province := row[1]
+
+			// There are several province series with bad names or dates which are duplicated in the state level dataset
+			// we therefore ignore them here as the data seems to be out of date anyway
+
+			// Fetch the series
+			series, err := slice.FetchSeries(country, province)
+			if err != nil {
+				log.Printf("load: warning reading daily state series:%s error:%s", row[1], err)
+				//return nil, fmt.Errorf("load: error reading daily series:%s error:%s", row[0], err)
+			}
+
+			// Get the series data from the row
+			updated, confirmed, deaths, recovered, err := readStateRow(row)
+			if err != nil {
+				return nil, fmt.Errorf("load: error reading row series:%s error:%s", row[1], err)
+			}
+
+			series.AddDayData(dayIndex, updated, confirmed, deaths, recovered)
+
+			// After reading row data, recalculate confirmed daily from confirmed
+			// first day is just set to first total after that daily totals are stored
+			series.UpdateConfirmedDaily()
+		}
+
+	}
+	return slice, nil
+}
+
+func readStateRow(row []string) (time.Time, int, int, int, error) {
+
+	// Dates are, remarkably, in two different formats in one file
+	// Try first in the one true format
+	var updated time.Time
+	var err error
+	if row[3] != "" {
+		// Ignore blank dates
+		updated, err = time.Parse("2006-01-02 15:04:05", row[3])
+		if err != nil {
+			// Then try the US format  3/13/2020 22:22
+			updated, err = time.Parse("1/2/2006 15:04", row[3])
+			if err != nil {
+				return updated, 0, 0, 0, fmt.Errorf("load: error reading updated at series:%s error:%s", row[1], err)
+			}
+		}
+	}
+
+	confirmed, err := strconv.Atoi(row[6])
+	if err != nil {
+		return updated, 0, 0, 0, fmt.Errorf("load: error reading confirmed series:%s error:%s", row[1], err)
+	}
+
+	deaths, err := strconv.Atoi(row[7])
+	if err != nil {
+		return updated, 0, 0, 0, fmt.Errorf("load: error reading deaths series:%s error:%s", row[1], err)
+	}
+
+	recovered, err := strconv.Atoi(row[8])
+	if err != nil {
+		return updated, 0, 0, 0, fmt.Errorf("load: error reading recovered series:%s error:%s", row[1], err)
+	}
+
+	return updated, confirmed, deaths, recovered, nil
 }

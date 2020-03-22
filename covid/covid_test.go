@@ -27,7 +27,7 @@ func TestLoadData(t *testing.T) {
 	// Test data is older and fixed in length
 	// We exclude US counties/cities as data is no longer accurate
 	// We add some global country entries which are not already there
-	if len(data) != 276 {
+	if len(data) != 296 {
 		t.Fatalf("test: load data failed wrong len:%d", len(data))
 	}
 
@@ -38,7 +38,7 @@ func TestLoadData(t *testing.T) {
 	}
 
 	// Test stable test data
-	if len(series.Deaths) != 57 {
+	if len(series.Deaths) != 61 {
 		t.Fatalf("test: failed fetching day of UK wrong len for deaths got:%d", len(series.Deaths))
 	}
 
@@ -77,5 +77,26 @@ func TestLoadData(t *testing.T) {
 	if value != 44 {
 		t.Errorf("test: failed fetching day of US wanted:%d got:%d", 44, value)
 	}
+
+	date, _ = time.Parse("2006-01-02", "2020-03-22")
+	value, err = data.FetchDate("United Kingdom", "", DataConfirmed, date)
+	if err != nil {
+		t.Fatalf("test: failed fetching day of US:%s", err)
+	}
+	if value != 5741 {
+		t.Errorf("test: failed fetching day 2020-03-22 of UK wanted:%d got:%d", 5741, value)
+	}
+
+	// This seems wrong - US deaths total is now higher...
+	date, _ = time.Parse("2006-01-02", "2020-03-22")
+	value, err = data.FetchDate("US", "", DataDeaths, date)
+	if err != nil {
+		t.Fatalf("test: failed fetching deaths of US:%s", err)
+	}
+	if value != 324 {
+		t.Errorf("test: failed fetching day 2020-03-22 of US deaths wanted:%d got:%d", 324, value)
+	}
+
+	//t.Logf("data:series:%s %v", series.Country, series.Confirmed)
 
 }
