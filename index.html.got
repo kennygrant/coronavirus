@@ -55,7 +55,7 @@
         text-align:center;
         font-size:0.6em;
     }
-    @media(max-width:1200px) {
+    @media(max-width:1000px) {
         h1 {
             font:3em/1.2em "Open Sans", sans-serif;
             margin:1rem 0;
