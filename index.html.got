@@ -162,13 +162,15 @@ var chartOptions = {
                 maxTicksLimit: maxTicks
             },
             gridLines: {
+                 zeroLineWidth:0,
                 color:"rgba(255, 255, 255,0)",
                 lineWidth: 0
             }
          }],
          yAxes: [{
+          
            position: "right",
-            ticks: {
+           ticks: {
                 fontSize:fontSize*5,
                 autoSkip: true,
                 maxTicksLimit: 5,
