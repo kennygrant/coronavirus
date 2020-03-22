@@ -293,7 +293,7 @@ func (slice SeriesSlice) CountryOptions() (options []Option) {
 // for now just show all which have province filled in.
 func (slice SeriesSlice) ProvinceOptions(country string) (options []Option) {
 
-	options = append(options, Option{Name: "Areas", Value: ""})
+	options = append(options, Option{Name: "All Areas", Value: ""})
 
 	for _, s := range slice {
 		if s.Country == country && s.Province != "" {
