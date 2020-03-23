@@ -249,7 +249,7 @@ func updateGlobal(data SeriesSlice) {
 		if s.AddToGlobal() {
 			global.MergeFinalDay(s)
 		} else {
-			log.Printf("skipping global:%s %d", s.Country, s.TotalDeaths())
+			//log.Printf("skipping global:%s %d", s.Country, s.TotalDeaths())
 		}
 	}
 
