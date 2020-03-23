@@ -386,6 +386,11 @@ func (slice SeriesSlice) ProvinceOptions(country string) (options []Option) {
 
 	options = append(options, Option{Name: "All Areas", Value: ""})
 
+	// Ignore UK and France for now as these are just outlying areas, not a breakdown
+	if country == "United Kingdom" || country == "France" {
+		return options
+	}
+
 	for _, s := range slice {
 		if s.Country == country && s.Province != "" {
 			options = append(options, Option{Name: s.Province, Value: s.Key(s.Province)})
