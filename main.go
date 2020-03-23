@@ -80,7 +80,9 @@ func loadTemplates() {
 		log.Fatalf("template error:%s", err)
 	}
 	funcMap := map[string]interface{}{
-		"e": escapeJSON,
+		"e":  escapeJSON,
+		"l":  outputList,
+		"ls": outputStringList,
 	}
 	jsonTemplate, err = template.New("index.json.got").Funcs(funcMap).ParseFiles("index.json.got")
 	if err != nil {
@@ -226,6 +228,32 @@ func escapeJSON(t string) template.HTML {
 	t = strings.Replace(t, "\"", "\\\"", -1)
 	// Because we use html/template escape as temlate.HTML
 	return template.HTML(t)
+}
+
+// outputList outputs a comma separated list with no trailing comma
+func outputList(ints []int) template.HTML {
+	result := ""
+	for i, v := range ints {
+		if i == 0 {
+			result = fmt.Sprintf("%d", v)
+		} else {
+			result = fmt.Sprintf("%s, %d", result, v)
+		}
+	}
+	return template.HTML("[" + result + "]")
+}
+
+// outputList outputs a comma separated list with no trailing comma
+func outputStringList(strings []string) template.HTML {
+	result := ""
+	for i, v := range strings {
+		if i == 0 {
+			result = fmt.Sprintf("\"%s\"", v)
+		} else {
+			result = fmt.Sprintf("%s, \"%s\"", result, v)
+		}
+	}
+	return template.HTML("[" + result + "]")
 }
 
 // StartTLSServer starts a TLS server using lets encrypt

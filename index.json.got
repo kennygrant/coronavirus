@@ -2,8 +2,8 @@
     "version"   : 1.0,
     "country"   : "{{e .series.Country}}",
     "province"  : "{{e .series.Province}}",
-    "dates"     : {{.series.Dates}},
-    "deaths"    : {{.series.Deaths}},
-    "confirmed" : {{.series.Confirmed}},
-    "recovered" : {{.series.Recovered}}
+    "dates"     : {{ls .series.Dates}},
+    "deaths"    : {{l .series.Deaths}},
+    "confirmed" : {{l .series.Confirmed}},
+    "recovered" : {{l .series.Recovered }}
 }
