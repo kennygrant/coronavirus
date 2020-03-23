@@ -65,6 +65,9 @@ func LoadData() error {
 		}
 	}
 
+	// Update the global dates
+	updateGlobal(data)
+
 	// Now we need to update the series counts for certain top-level entries added above
 	//	updateFinalSeriesCounts(data)
 
@@ -223,8 +226,8 @@ func processData(data SeriesSlice) SeriesSlice {
 	return data
 }
 
-// updateFinalSeriesCounts adds the last day of global data now that we have other data
-func updateFinalSeriesCounts(data SeriesSlice) {
+// updateGlobal updates the global data with the updated at date
+func updateGlobal(data SeriesSlice) {
 
 	global, err := data.FetchSeries("", "")
 	if err != nil {
@@ -241,9 +244,12 @@ func updateFinalSeriesCounts(data SeriesSlice) {
 	// Add global country entries for countries with data broken down at province level
 	// Add a global dataset from all other datasets combined
 	for _, s := range data {
-		// Add final day for each series to global totals
-		if !s.Global() {
+		// Add final day for each series to global totals, ignoring our synthetic globals not in orgiginal dataset
+		// US, Global etc
+		if s.AddToGlobal() {
 			global.MergeFinalDay(s)
+		} else {
+			log.Printf("skipping global:%s %d", s.Country, s.TotalDeaths())
 		}
 	}
 

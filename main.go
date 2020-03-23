@@ -90,6 +90,8 @@ func loadTemplates() {
 // handleHome shows our website
 func handleHome(w http.ResponseWriter, r *http.Request) {
 
+	log.Printf("request:%s", r.URL)
+
 	// Get the parameters from the url
 	country, province, period := parseParams(r)
 
@@ -105,7 +107,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		series = series.Days(period)
 	}
 
-	log.Printf("request:%s country:%s province:%s period:%d", r.URL, country, province, period)
+	//log.Printf("request:%s country:%s province:%s period:%d", r.URL, country, province, period)
 
 	// Set up context with data
 	context := map[string]interface{}{

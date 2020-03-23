@@ -43,6 +43,14 @@ type Series struct {
 	ConfirmedDaily []int
 }
 
+// UpdatedAtDisplay retuns a string to display updated at date (if we have a date)
+func (s *Series) UpdatedAtDisplay() string {
+	if s.UpdatedAt.IsZero() {
+		return ""
+	}
+	return fmt.Sprintf("Data last updated at %s", s.UpdatedAt.Format("2006-01-02 15:04 MST"))
+}
+
 // Title returns a display title for this series
 func (s *Series) Title() string {
 	if s.Country == "" && s.Province == "" {
@@ -138,6 +146,10 @@ func (s *Series) Merge(series *Series) {
 		}
 	}
 
+	if !series.UpdatedAt.IsZero() && (s.UpdatedAt.IsZero() || series.UpdatedAt.After(s.UpdatedAt)) {
+		s.UpdatedAt = series.UpdatedAt
+	}
+
 }
 
 // MergeFinalDay merges the final day of data
@@ -152,12 +164,42 @@ func (s *Series) MergeFinalDay(series *Series) error {
 	s.Recovered[i] += series.Recovered[i]
 	s.ConfirmedDaily[i] += series.ConfirmedDaily[i]
 
+	//if !series.UpdatedAt.IsZero() && (s.UpdatedAt.IsZero() || series.UpdatedAt.After(s.UpdatedAt)) {
+	s.UpdatedAt = series.UpdatedAt
+	//}
+
 	return nil
 }
 
 // Global returns true if this is the global series
 func (s *Series) Global() bool {
 	return s.Country == "" && s.Province == ""
+}
+
+// AddToGlobal returns true if this is the global series
+func (s *Series) AddToGlobal() bool {
+	// For provinces - add all
+	if s.Province != "" {
+		return true
+	}
+
+	// For countries, exclude those not in original dataset
+	// usually because they have sub-country level data (e.g. US States)
+	switch s.Country {
+	case "":
+		return false
+	case "US":
+		return false
+	case "China":
+		return false
+	case "Australia":
+		return false
+	case "Canada":
+		return false
+	default:
+		return true
+	}
+
 }
 
 // Format formats a given number for display and returns a string
@@ -243,11 +285,11 @@ func (s *Series) Days(days int) *Series {
 	return &Series{
 		Country:        s.Country,
 		Province:       s.Province,
-		StartsAt:       s.StartsAt.AddDate(0, 0, days),
-		Deaths:         s.Deaths[:i],
-		Confirmed:      s.Confirmed[:i],
-		Recovered:      s.Recovered[:i],
-		ConfirmedDaily: s.ConfirmedDaily[:i],
+		StartsAt:       s.StartsAt.AddDate(0, 0, i+1),
+		Deaths:         s.Deaths[i:],
+		Confirmed:      s.Confirmed[i:],
+		Recovered:      s.Recovered[i:],
+		ConfirmedDaily: s.ConfirmedDaily[i:],
 	}
 }
 
