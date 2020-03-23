@@ -39,7 +39,8 @@ type Series struct {
 	Confirmed []int
 	Recovered []int
 
-	// Confirmed daily totals
+	// Daily totals
+	DeathsDaily    []int
 	ConfirmedDaily []int
 }
 
@@ -122,6 +123,7 @@ func (s *Series) Merge(series *Series) {
 		s.Deaths = make([]int, len(series.Deaths))
 		s.Confirmed = make([]int, len(series.Confirmed))
 		s.Recovered = make([]int, len(series.Recovered))
+		s.DeathsDaily = make([]int, len(series.Deaths))
 		s.ConfirmedDaily = make([]int, len(series.Confirmed))
 	}
 
@@ -136,8 +138,15 @@ func (s *Series) Merge(series *Series) {
 		s.Recovered[i] += d
 	}
 
-	// Calculate confirmed daily from confirmed
+	// Calculate daily totals
 	// first day is just set to first total after that daily totals are stored
+	for i := range series.Deaths {
+		if i == 0 {
+			s.DeathsDaily[i] = s.Deaths[i]
+		} else {
+			s.DeathsDaily[i] = s.Deaths[i] - s.Deaths[i-1]
+		}
+	}
 	for i := range series.Confirmed {
 		if i == 0 {
 			s.ConfirmedDaily[i] = s.Confirmed[i]
@@ -146,6 +155,7 @@ func (s *Series) Merge(series *Series) {
 		}
 	}
 
+	// Update updated at on series
 	if !series.UpdatedAt.IsZero() && (s.UpdatedAt.IsZero() || series.UpdatedAt.After(s.UpdatedAt)) {
 		s.UpdatedAt = series.UpdatedAt
 	}
@@ -162,11 +172,12 @@ func (s *Series) MergeFinalDay(series *Series) error {
 	s.Confirmed[i] += series.Confirmed[i]
 	s.Deaths[i] += series.Deaths[i]
 	s.Recovered[i] += series.Recovered[i]
+	s.DeathsDaily[i] += series.DeathsDaily[i]
 	s.ConfirmedDaily[i] += series.ConfirmedDaily[i]
 
-	//if !series.UpdatedAt.IsZero() && (s.UpdatedAt.IsZero() || series.UpdatedAt.After(s.UpdatedAt)) {
-	s.UpdatedAt = series.UpdatedAt
-	//}
+	if !series.UpdatedAt.IsZero() && (s.UpdatedAt.IsZero() || series.UpdatedAt.After(s.UpdatedAt)) {
+		s.UpdatedAt = series.UpdatedAt
+	}
 
 	return nil
 }
@@ -229,17 +240,14 @@ func (s *Series) RecoveredDisplay() string {
 	return s.Format(s.TotalRecovered())
 }
 
-// ConfirmedLastDisplay returns a string representation of ConfirmedAtIndex for last data in series
-func (s *Series) ConfirmedLastDisplay() string {
+// ConfirmedToday returns a string representation of confirmed for last data in series
+func (s *Series) ConfirmedToday() string {
 	return s.Format(s.ConfirmedDaily[len(s.ConfirmedDaily)-1])
 }
 
-// ConfirmedAtIndex returns the value for confirmed from the given index
-func (s *Series) ConfirmedAtIndex(i int) int {
-	if i == 0 {
-		return s.Confirmed[0]
-	}
-	return s.Confirmed[i] - s.Confirmed[i-1]
+// DeathsToday returns a string representation of deaths for last data in series
+func (s *Series) DeathsToday() string {
+	return s.Format(s.DeathsDaily[len(s.DeathsDaily)-1])
 }
 
 // DailyData - for a given series of cumulative total ints,
@@ -290,12 +298,22 @@ func (s *Series) Days(days int) *Series {
 		Deaths:         s.Deaths[i:],
 		Confirmed:      s.Confirmed[i:],
 		Recovered:      s.Recovered[i:],
+		DeathsDaily:    s.DeathsDaily[i:],
 		ConfirmedDaily: s.ConfirmedDaily[i:],
 	}
 }
 
-// UpdateConfirmedDaily updates the confirmed daily based on a new set of values for Confirmed
-func (s *Series) UpdateConfirmedDaily() {
+// UpdateDaily updates the confirmed daily based on a new set of values for Confirmed
+func (s *Series) UpdateDaily() {
+	s.DeathsDaily = make([]int, len(s.Deaths))
+	for i := range s.Deaths {
+		if i == 0 {
+			s.DeathsDaily[i] = s.Deaths[i]
+		} else {
+			s.DeathsDaily[i] = s.Deaths[i] - s.Deaths[i-1]
+		}
+	}
+
 	s.ConfirmedDaily = make([]int, len(s.Confirmed))
 	for i := range s.Confirmed {
 		if i == 0 {
@@ -519,7 +537,7 @@ func (slice SeriesSlice) mergeTimeSeriesCSV(records [][]string, dataType int) (S
 
 			// After reading row data, calculate confirmed daily from confirmed
 			// first day is just set to first total after that daily totals are stored
-			series.UpdateConfirmedDaily()
+			series.UpdateDaily()
 
 		}
 
@@ -579,7 +597,7 @@ func (slice SeriesSlice) mergeDailyCountryCSV(records [][]string, dataType int) 
 
 			// After reading row data, recalculate confirmed daily from confirmed
 			// first day is just set to first total after that daily totals are stored
-			series.UpdateConfirmedDaily()
+			series.UpdateDaily()
 		}
 
 	}
@@ -669,7 +687,7 @@ func (slice SeriesSlice) mergeDailyStateCSV(records [][]string, dataType int) (S
 
 			// After reading row data, recalculate confirmed daily from confirmed
 			// first day is just set to first total after that daily totals are stored
-			series.UpdateConfirmedDaily()
+			series.UpdateDaily()
 		}
 
 	}

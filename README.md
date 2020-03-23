@@ -11,6 +11,7 @@ You can see the data at https://coronavirus.projectpage.app/
 
 You can also access a json feed for any of the series at urls like this: https://coronavirus.projectpage.app/global.json
 
+Data is held in memory on the server so response times should be fast even under load. 
 
 # Notes on Data
 There are some inconsistencies in the source data, which where possible have been corrected. All changes made to the data are outlined below. 
@@ -23,9 +24,9 @@ There are some inconsistencies in the source data, which where possible have bee
 
 Known problems: 
 
-* US county level data is no longer updated and has been omitted
+* US county time series data is no longer updated and has been omitted
 * US recovered cases appear to no longer be updated, but have been left in the data as-is
-* UK does not have a full area breakdown, only overseas dependencies
+* UK does not have a full area breakdown at present
 
 
 # Installation 
@@ -34,11 +35,10 @@ There are no external requirements except a working go install to build, data is
 
 COVID=dev go run main.go 
 
-Data is updated once daily from the data source. 
-
+Today's data is updated hourly from the data source, historical time series data is updated once a day (for corrections). 
 
 # License 
 
-This code is released as open source in the public domain, use it as you see fit. Data cannot be copyright.
+This code and any modified data is released as open source in the public domain, use it as you see fit. 
 
 The author hereby disclaims any and all representations and warranties with respect to the code and website, including accuracy, fitness for use, and merchantability. Reliance on the website for medical guidance or use of the website in commerce is strictly prohibited.

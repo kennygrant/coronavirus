@@ -244,6 +244,7 @@ func updateGlobal(data SeriesSlice) {
 	global.Deaths = append(global.Deaths, 0)
 	global.Confirmed = append(global.Confirmed, 0)
 	global.Recovered = append(global.Recovered, 0)
+	global.DeathsDaily = append(global.DeathsDaily, 0)
 	global.ConfirmedDaily = append(global.ConfirmedDaily, 0)
 
 	// Add global country entries for countries with data broken down at province level

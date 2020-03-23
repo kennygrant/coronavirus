@@ -128,10 +128,13 @@
     </form>
 
 
-
     <div class="chart_container">
-        <canvas class="chart" id="chartDeceased" ></canvas>
+        <canvas class="chart" id="chartDailyDeaths" ></canvas>
     </div>
+    <div class="chart_container">
+        <canvas class="chart" id="chartDeaths" ></canvas>
+    </div>
+
     <div class="chart_container">
         <canvas class="chart" id="chartDailyConfirmed" ></canvas>
     </div>
@@ -217,24 +220,68 @@ var chartOptions = {
     maintainAspectRatio:false
 }
 
-var chartDeceasedData = {
-    "labels":{{.series.Dates}},
-    "datasets":[{
-        "label":"COVID-19 Deaths",
-        "data":{{.series.Deaths}},
+
+var chartDailyDeathsData = {
+      "labels":{{.series.Dates}},
+      "datasets":[{
+        "label":"COVID-19 Daily Deaths",
+        "data":{{.series.DeathsDaily}},
         "fill":true,
         "borderWidth":"0",
-        "backgroundColor":"rgb(30, 30, 30,0.5)",
+        "backgroundColor":"rgb(70, 30, 30,0.7)",
         "lineTension":0.1
         }]
 }
 
-var chartDeceasedCtx = document.getElementById('chartDeceased').getContext('2d');
-chartOptions.title.text =  "{{.series.DeathsDisplay}} Deaths";
-var chartDeceased = new Chart(chartDeceasedCtx, {
+var chartDailyDeathsCtx = document.getElementById('chartDailyDeaths').getContext('2d');
+chartOptions.title.text = "{{.series.DeathsToday}} Deaths Today";
+var chartRecovered = new Chart(chartDailyDeathsCtx, {
+    type: 'bar',
+    options: chartOptions,
+    data: chartDailyDeathsData
+});
+
+
+var chartDailyConfirmedData = {
+      "labels":{{.series.Dates}},
+      "datasets":[{
+        "label":"COVID-19 Daily Confirmed",
+        "data":{{.series.ConfirmedDaily}},
+        "fill":true,
+        "borderWidth":"0",
+        "backgroundColor":"rgb(163,32,32,0.7)",
+        "lineTension":0.1
+        }]
+}
+
+var chartDailyConfirmedCtx = document.getElementById('chartDailyConfirmed').getContext('2d');
+chartOptions.title.text = "{{.series.ConfirmedToday}} Confirmed Cases Today";
+var chartRecovered = new Chart(chartDailyConfirmedCtx, {
+    type: 'bar',
+    options: chartOptions,
+    data: chartDailyConfirmedData
+});
+
+
+
+var chartDeathsData = {
+    "labels":{{.series.Dates}},
+    "datasets":[{
+        "label":"COVID-19 Total Deaths",
+        "data":{{.series.Deaths}},
+        "fill":true,
+        "borderWidth":"0",
+        "backgroundColor":"rgb(70, 30, 30,0.7)",
+        "lineTension":0.1
+        }]
+}
+
+var chartDeathsCtx = document.getElementById('chartDeaths').getContext('2d');
+chartOptions.title.text =  "{{.series.DeathsDisplay}} Total Deaths";
+var chartDeaths = new Chart(chartDeathsCtx, {
     type: 'line',
     options: chartOptions,
-    data: chartDeceasedData
+    data: chartDeathsData
 });
 
 
@@ -242,49 +289,27 @@ var chartDeceased = new Chart(chartDeceasedCtx, {
 var chartConfirmedData = {
       "labels":{{.series.Dates}},
       "datasets":[{
-        "label":"COVID-19 Confirmed",
+        "label":"COVID-19 Total Confirmed",
         "data":{{.series.Confirmed}},
         "fill":true,
          "borderWidth":"0",
-        "backgroundColor":"rgb(163,32,32,0.5)",
+        "backgroundColor":"rgb(163,32,32,0.7)",
         "lineTension":0.1
         }]
 }
 
 var chartConfirmedCtx = document.getElementById('chartConfirmed').getContext('2d');
-chartOptions.title.text = "{{.series.ConfirmedDisplay}} Confirmed";
+chartOptions.title.text = "{{.series.ConfirmedDisplay}} Total Confirmed";
 var chartConfirmed = new Chart(chartConfirmedCtx, {
     type: 'line',
     options: chartOptions,
     data: chartConfirmedData
 });
 
-
-var chartDailyData = {
-      "labels":{{.series.Dates}},
-      "datasets":[{
-        "label":"COVID-19 Confirmed Daily Counts",
-        "data":{{.series.ConfirmedDaily}},
-        "fill":true,
-        "borderWidth":"0",
-        "backgroundColor":"rgb(163,32,32,0.5)",
-        "lineTension":0.1
-        }]
-}
-
-var chartDailyConfirmedCtx = document.getElementById('chartDailyConfirmed').getContext('2d');
-chartOptions.title.text = "{{.series.ConfirmedLastDisplay}} Confirmed Cases Today";
-var chartRecovered = new Chart(chartDailyConfirmedCtx, {
-    type: 'bar',
-    options: chartOptions,
-    data: chartDailyData
-});
-
-
 var chartRecoveredData = {
       "labels":{{.series.Dates}},
       "datasets":[{
-        "label":"COVID-19 Recovered",
+        "label":"COVID-19 Total Recovered",
         "data":{{.series.Recovered}},
         "fill":true,
         "borderWidth":"0",
@@ -294,7 +319,7 @@ var chartRecoveredData = {
 }
 
 var chartRecoveredCtx = document.getElementById('chartRecovered').getContext('2d');
-chartOptions.title.text = "{{.series.RecoveredDisplay}} Recovered";
+chartOptions.title.text = "{{.series.RecoveredDisplay}} Total Recovered";
 var chartRecovered = new Chart(chartRecoveredCtx, {
     type: 'line',
     options: chartOptions,
