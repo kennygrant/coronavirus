@@ -1,5 +1,7 @@
 <html>
 <head>
+<title>COVID-19 Statistics</title>
+<meta name="description" content="COVID-19 Novel Coronavirus stats and json API, updated hourly">
 <link rel="icon" type="image/png" href="favicon.ico">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.css">
@@ -72,7 +74,7 @@
         text-decoration:none;
         padding:0.25rem 0.5rem;
     }
-    @media(max-width:800px) {
+    @media(max-width:1000px) {
         h1 {
             font:3em/1.2em "Open Sans", sans-serif;
             margin:1rem 0;
@@ -166,11 +168,17 @@
 
 /* Determine font size based on device */
 var fontSize  = 5;
-var maxTicks = 8;
+var maxTicks = 12;
+
 if (document.body.clientWidth > 1000) {
     fontSize = 2;
-    maxTicks = 31;
+    maxTicks = 30;
     console.log("small font")
+}
+
+if (document.body.clientWidth > 1500) {
+    fontSize = 2;
+    maxTicks = 70;
 }
 
 var chartOptions = {
