@@ -204,9 +204,10 @@ func (s *Series) AddToGlobal() bool {
 
 // Format formats a given number for display and returns a string
 func (s *Series) Format(i int) string {
-	if i < 1000 {
+	if i < 10000 {
 		return fmt.Sprintf("%d", i)
 	}
+
 	if i < 1000000 {
 		return fmt.Sprintf("%.2fk", float64(i)/1000)
 	}
