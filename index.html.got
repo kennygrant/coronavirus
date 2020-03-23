@@ -59,7 +59,20 @@
         text-align:center;
         font-size:0.9em;
     }
-    @media(max-width:1000px) {
+    .buttons {
+        clear:both;
+        margin:1rem 0;
+        text-align:center;
+    }
+    .button {
+        font-size:0.8rem;
+        background-color:#ccc;
+        color:#fff;
+        border-radius:0.2rem;
+        text-decoration:none;
+        padding:0.25rem 0.5rem;
+    }
+    @media(max-width:800px) {
         h1 {
             font:3em/1.2em "Open Sans", sans-serif;
             margin:1rem 0;
@@ -120,11 +133,12 @@
         <canvas class="chart" id="chartDeceased" ></canvas>
     </div>
     <div class="chart_container">
-        <canvas class="chart" id="chartConfirmed" ></canvas>
+        <canvas class="chart" id="chartDailyConfirmed" ></canvas>
     </div>
     <div class="chart_container">
-        <canvas class="chart" id="chartDaily" ></canvas>
+        <canvas class="chart" id="chartConfirmed" ></canvas>
     </div>
+
     <div class="chart_container">
         <canvas class="chart" id="chartRecovered" ></canvas>
     </div>
@@ -133,6 +147,9 @@
         <p class="updated_at">{{ .series.UpdatedAtDisplay}}</p>
     {{ end }}
 
+    <div class="buttons">
+    <a href="{{.jsonURL}}" class="button">JSON Feed</a> <a href="https://github.com/kennygrant/coronavirus" class="button">About</a>
+    </div>
     </article>
 
 
@@ -255,9 +272,9 @@ var chartDailyData = {
         }]
 }
 
-var chartDailyCtx = document.getElementById('chartDaily').getContext('2d');
-chartOptions.title.text = "{{.series.ConfirmedLastDisplay}} Daily Confirmed";
-var chartRecovered = new Chart(chartDailyCtx, {
+var chartDailyConfirmedCtx = document.getElementById('chartDailyConfirmed').getContext('2d');
+chartOptions.title.text = "{{.series.ConfirmedLastDisplay}} Confirmed Cases Today";
+var chartRecovered = new Chart(chartDailyConfirmedCtx, {
     type: 'bar',
     options: chartOptions,
     data: chartDailyData

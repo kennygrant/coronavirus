@@ -14,10 +14,15 @@ import (
 )
 
 var dataPath = "./data"
-var dataFiles = []string{
+var dailyDataFiles = []string{
 	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv",
 	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv",
 	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv",
+	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/web-data/data/cases_state.csv",
+	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/web-data/data/cases_country.csv",
+}
+
+var hourlyDataFiles = []string{
 	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/web-data/data/cases_state.csv",
 	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/web-data/data/cases_country.csv",
 }
@@ -261,20 +266,58 @@ func ScheduleDataFetch() {
 	now := time.Now()
 	when := time.Date(now.Year(), now.Month(), now.Day(), 3, 33, 0, 0, time.UTC)
 	daily := time.Hour * 24 // daily
+	hourly := time.Hour     // hourly
 
 	// For debug, test straight away
 	//when = now.Add(5 * time.Second)
 
-	// Schedule the fetch
+	// Schedule the fetch for daily data
 	ScheduleAt(FetchDataDaily, when, daily)
+
+	// Schedule an hourly fetch for hourly data
+	when = time.Date(now.Year(), now.Month(), now.Day(), 0, 1, 0, 0, time.UTC)
+
+	ScheduleAt(FetchDataHourly, when, hourly)
+
 }
 
 // FetchDataDaily is called on a schedule
 func FetchDataDaily() {
-	log.Printf("daily: fetching data from data source")
-	err := FetchData()
+	log.Printf("schedule: fetching daily data from data source")
+
+	// First download the files we need from github master branch to our data dir
+	err := DownloadFiles(dailyDataFiles, dataPath)
 	if err != nil {
-		log.Printf("daily: error fetching data from data source:%s", err)
+		log.Printf("schedule: error fetching daily data from data source:%s", err)
+	}
+
+	// Add a pause after requests
+	time.Sleep(1 * time.Second)
+
+	// Trigger a reload of the data from our standard data path
+	err = LoadData()
+	if err != nil {
+		log.Printf("schedule: error loading daily data from data source:%s", err)
+	}
+}
+
+// FetchDataHourly is called on a schedule
+func FetchDataHourly() {
+	log.Printf("schedule: fetching hourly data from data source")
+
+	// First download hourly data files
+	err := DownloadFiles(hourlyDataFiles, dataPath)
+	if err != nil {
+		log.Printf("schedule: error fetching daily data from data source:%s", err)
+	}
+
+	// Add a pause after requests
+	time.Sleep(1 * time.Second)
+
+	// Trigger a reload of the data from our standard data path
+	err = LoadData()
+	if err != nil {
+		log.Printf("schedule: error loading daily data from data source:%s", err)
 	}
 }
 
@@ -283,7 +326,7 @@ func FetchDataDaily() {
 func FetchData() error {
 
 	// First download the 3 x files we need from github master branch to our data dir
-	err := DownloadFiles(dataFiles, dataPath)
+	err := DownloadFiles(dailyDataFiles, dataPath)
 	if err != nil {
 		return err
 	}
@@ -300,7 +343,7 @@ func FetchData() error {
 func DownloadFiles(urls []string, dataPath string) error {
 
 	for _, url := range urls {
-		log.Printf("daily: downloading file %s", url)
+		log.Printf("schedule: downloading file %s", url)
 
 		// Get the data
 		resp, err := http.Get(url)

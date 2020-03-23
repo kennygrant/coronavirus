@@ -286,7 +286,7 @@ func (s *Series) Days(days int) *Series {
 	return &Series{
 		Country:        s.Country,
 		Province:       s.Province,
-		StartsAt:       s.StartsAt.AddDate(0, 0, i+1),
+		StartsAt:       s.StartsAt.AddDate(0, 0, i),
 		Deaths:         s.Deaths[i:],
 		Confirmed:      s.Confirmed[i:],
 		Recovered:      s.Recovered[i:],
@@ -449,10 +449,8 @@ func (slice SeriesSlice) MergeCSV(records [][]string, dataType int) (SeriesSlice
 	// If daily data, merge it to existing last date
 	switch dataType {
 	case DataTodayCountry:
-		log.Printf(" country")
 		return slice.mergeDailyCountryCSV(records, dataType)
 	case DataTodayState:
-		log.Printf(" state")
 		return slice.mergeDailyStateCSV(records, dataType)
 	}
 

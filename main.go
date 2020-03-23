@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -109,6 +110,8 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 
 	//log.Printf("request:%s country:%s province:%s period:%d", r.URL, country, province, period)
 
+	jsonURL := fmt.Sprintf("%s.json?period=%d", r.URL.Path, period)
+
 	// Set up context with data
 	context := map[string]interface{}{
 		"period":          strconv.Itoa(period),
@@ -118,6 +121,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		"periodOptions":   covid.PeriodOptions(),
 		"countryOptions":  covid.CountryOptions(),
 		"provinceOptions": covid.ProvinceOptions(series.Country),
+		"jsonURL":         jsonURL,
 	}
 
 	// If in development reload templates each time
