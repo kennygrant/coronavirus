@@ -26,7 +26,7 @@ const (
 
 // Series stores data for one country or province within a country
 type Series struct {
-	// UTCE Date data last updated
+	// UTC Date data last updated
 	UpdatedAt time.Time
 	// The Country or Region
 	Country string
@@ -410,6 +410,8 @@ func ProvinceOptions(country string) (options []Option) {
 func PeriodOptions() (options []Option) {
 
 	options = append(options, Option{Name: "All Time", Value: "0"})
+	options = append(options, Option{Name: "112 Days", Value: "112"})
+	options = append(options, Option{Name: "56 Days", Value: "56"})
 	options = append(options, Option{Name: "28 Days", Value: "28"})
 	options = append(options, Option{Name: "14 Days", Value: "14"})
 	options = append(options, Option{Name: "7 Days", Value: "7"})
