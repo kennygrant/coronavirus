@@ -3,7 +3,7 @@
 
 This project uses data from to product charts of deaths, confirmed cases and recovered cases from countries globally, based on data provided by <a href="https://systems.jhu.edu/research/public-health/ncov/">John Hopkins University</a>. The source data is available <a href="https://github.com/CSSEGISandData/COVID-19">here</a> on github and is updated daily from that source.  
 
-This project and all code and data transformations are public domain and free in every sense, corrections and contributions are welcome. 
+![Covid-19](https://raw.githubusercontent.com/kennygrant/coronavirus/master/README.jpg)
 
 # View the data
 
@@ -11,7 +11,7 @@ You can see the data at https://coronavirus.projectpage.app/
 
 You can also access a json feed for any of the series at urls like this: https://coronavirus.projectpage.app/global.json
 
-Data is held in memory on the server so response times should be fast even under load. 
+Data is held in memory on the server so response times should be fast even under load. This project and all code and data transformations are public domain and free in every sense, corrections and contributions are welcome. 
 
 # Notes on Data
 There are some inconsistencies in the source data, which where possible have been corrected. All changes made to the data are outlined below. 
