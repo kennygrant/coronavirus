@@ -1,7 +1,9 @@
 
 # Covid-19 (Novel Coronavirus) Global Charts
 
-This project uses data from to product charts of deaths, confirmed cases and recovered cases from countries globally, based on data provided by <a href="https://systems.jhu.edu/research/public-health/ncov/">John Hopkins University</a>. The source data is available <a href="https://github.com/CSSEGISandData/COVID-19">here</a> on github and is updated daily from that source.  
+Website: <a href="https://coronavirus.projectpage.app">https://coronavirus.projectpage.app</a>
+
+This project uses data from to product charts of deaths, confirmed cases and recovered cases from countries globally, based on data provided by <a href="https://systems.jhu.edu/research/public-health/ncov/">John Hopkins University</a>. The source data is available <a href="https://github.com/CSSEGISandData/COVID-19">here</a> on github and is updated hourly from that source.  
 
 ![Covid-19](https://raw.githubusercontent.com/kennygrant/coronavirus/master/README.jpg)
 
