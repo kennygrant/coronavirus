@@ -244,10 +244,10 @@ func (s *Series) Days(days int) *Series {
 		Country:        s.Country,
 		Province:       s.Province,
 		StartsAt:       s.StartsAt.AddDate(0, 0, days),
-		Deaths:         s.Deaths[i:],
-		Confirmed:      s.Confirmed[i:],
-		Recovered:      s.Recovered[i:],
-		ConfirmedDaily: s.ConfirmedDaily[i:],
+		Deaths:         s.Deaths[:i],
+		Confirmed:      s.Confirmed[:i],
+		Recovered:      s.Recovered[:i],
+		ConfirmedDaily: s.ConfirmedDaily[:i],
 	}
 }
 
