@@ -73,8 +73,8 @@ func LoadData() error {
 	// Update the global dates
 	updateGlobal(data)
 
-	// Now we need to update the series counts for certain top-level entries added above
-	//	updateFinalSeriesCounts(data)
+	// Sort the data by deaths, then alphabetically by country
+	sort.Stable(data)
 
 	log.Printf("server: loaded data in %s len:%d", time.Now().Sub(start), len(data))
 
