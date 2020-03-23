@@ -309,7 +309,7 @@ func DownloadFiles(urls []string, dataPath string) error {
 		}
 		path := filepath.Join(dataPath, name)
 		// Open or Create the file locally if required
-		f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0700)
+		f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0700)
 		if err != nil {
 			return fmt.Errorf("data: error opening file:%s", err)
 		}
