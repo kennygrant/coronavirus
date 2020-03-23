@@ -434,7 +434,11 @@ func (slice SeriesSlice) CountryOptions() (options []Option) {
 
 	for _, s := range slice {
 		if s.Province == "" && s.Country != "" {
-			options = append(options, Option{Name: s.Country, Value: s.Key(s.Country)})
+			name := s.Country
+			if s.TotalDeaths() > 0 {
+				name = fmt.Sprintf("%s (%d Deaths)", s.Country, s.TotalDeaths())
+			}
+			options = append(options, Option{Name: name, Value: s.Key(s.Country)})
 		}
 	}
 
@@ -456,7 +460,11 @@ func (slice SeriesSlice) ProvinceOptions(country string) (options []Option) {
 
 	for _, s := range slice {
 		if s.Country == country && s.Province != "" {
-			options = append(options, Option{Name: s.Province, Value: s.Key(s.Province)})
+			name := s.Province
+			if s.TotalDeaths() > 0 {
+				name = fmt.Sprintf("%s (%d Deaths)", s.Province, s.TotalDeaths())
+			}
+			options = append(options, Option{Name: name, Value: s.Key(s.Province)})
 		}
 	}
 
