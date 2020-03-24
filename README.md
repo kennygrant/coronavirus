@@ -18,16 +18,16 @@ Data is held in memory on the server so response times should be fast even under
 # Notes on Data
 There are some inconsistencies in the source data, which where possible have been corrected. All changes made to the data are outlined below. 
 
-The main datasource changed significantly on, and unfortunately no longer provides a breakdown of US states in the time series data, only the daily data. I'm investigating ways to address that, but for now there is only one entry for the US.
+The main datasource changed significantly on 24th March, just after launching this page, and unfortunately no longer provides a breakdown of US states in the time series data, only the daily data. I'm investigating ways to address that, but for now there is only one entry for the US.
 
-## Version 2
+## 24th March
 
 * Removed US overall data - a sum of all other series with country US
 * Data source no longer provides recovered cases, so it was removed 
 * Data source no longer provides US states, so it has been removed - investigating other options 
 * UK does not have a full area breakdown at present
 
-## Version 1 
+## 22nd March - initial version
 
 * Added Global time series which is a sum of all other series 
 * Added China overall data - a sum of all other series with country China
