@@ -19,7 +19,7 @@ var data SeriesSlice
 const (
 	DataDeaths = iota
 	DataConfirmed
-	DataRecovered
+	DataRecovered // No longer active
 	DataTodayState
 	DataTodayCountry
 )
@@ -37,7 +37,7 @@ type Series struct {
 	// Total Deaths, Confirmed or Recovered by day (cumulative)
 	Deaths    []int
 	Confirmed []int
-	Recovered []int
+	//	Recovered []int
 
 	// Daily totals
 	DeathsDaily    []int
@@ -92,8 +92,6 @@ func (s *Series) FetchDate(datum int, date time.Time) int {
 		return s.Deaths[i]
 	case DataConfirmed:
 		return s.Confirmed[i]
-	case DataRecovered:
-		return s.Recovered[i]
 	}
 	return 0
 }
@@ -122,7 +120,6 @@ func (s *Series) Merge(series *Series) {
 	if len(s.Deaths) == 0 {
 		s.Deaths = make([]int, len(series.Deaths))
 		s.Confirmed = make([]int, len(series.Confirmed))
-		s.Recovered = make([]int, len(series.Recovered))
 		s.DeathsDaily = make([]int, len(series.Deaths))
 		s.ConfirmedDaily = make([]int, len(series.Confirmed))
 	}
@@ -133,9 +130,6 @@ func (s *Series) Merge(series *Series) {
 	}
 	for i, d := range series.Confirmed {
 		s.Confirmed[i] += d
-	}
-	for i, d := range series.Recovered {
-		s.Recovered[i] += d
 	}
 
 	// Calculate daily totals
@@ -171,7 +165,6 @@ func (s *Series) MergeFinalDay(series *Series) error {
 
 	s.Confirmed[i] += series.Confirmed[i]
 	s.Deaths[i] += series.Deaths[i]
-	s.Recovered[i] += series.Recovered[i]
 	s.DeathsDaily[i] += series.DeathsDaily[i]
 	s.ConfirmedDaily[i] += series.ConfirmedDaily[i]
 
@@ -235,11 +228,6 @@ func (s *Series) ConfirmedDisplay() string {
 	return s.Format(s.TotalConfirmed())
 }
 
-// RecoveredDisplay returns a string representation of TotalRecovered
-func (s *Series) RecoveredDisplay() string {
-	return s.Format(s.TotalRecovered())
-}
-
 // ConfirmedToday returns a string representation of confirmed for last data in series
 func (s *Series) ConfirmedToday() string {
 	return s.Format(s.ConfirmedDaily[len(s.ConfirmedDaily)-1])
@@ -280,14 +268,6 @@ func (s *Series) TotalConfirmed() int {
 	return s.Confirmed[len(s.Confirmed)-1] - s.Confirmed[0]
 }
 
-// TotalRecovered returns the cumulative confirmed cases of COVID-19 for this series
-func (s *Series) TotalRecovered() int {
-	if len(s.Recovered) > 60 {
-		return s.Recovered[len(s.Recovered)-1]
-	}
-	return s.Recovered[len(s.Recovered)-1] - s.Recovered[0]
-}
-
 // Days returns a copy of this series for just the given number of days in the past
 func (s *Series) Days(days int) *Series {
 	i := len(s.Deaths) - days
@@ -297,7 +277,6 @@ func (s *Series) Days(days int) *Series {
 		StartsAt:       s.StartsAt.AddDate(0, 0, i),
 		Deaths:         s.Deaths[i:],
 		Confirmed:      s.Confirmed[i:],
-		Recovered:      s.Recovered[i:],
 		DeathsDaily:    s.DeathsDaily[i:],
 		ConfirmedDaily: s.ConfirmedDaily[i:],
 	}
@@ -326,19 +305,17 @@ func (s *Series) UpdateDaily() {
 
 // AddDayData sets the data at dayIndex to the supplied data
 // if necessary a day will be added
-func (s *Series) AddDayData(dayIndex int, updated time.Time, confirmed, deaths, recovered int) {
+func (s *Series) AddDayData(dayIndex int, updated time.Time, confirmed, deaths int) {
 	s.UpdatedAt = updated
 
 	if dayIndex > len(s.Deaths)-1 {
 		//	fmt.Printf("dayIndex:%d %d\n", dayIndex, len(s.Deaths))
 		s.Deaths = append(s.Deaths, deaths)
 		s.Confirmed = append(s.Confirmed, confirmed)
-		s.Recovered = append(s.Recovered, recovered)
 	} else {
 		//	fmt.Printf("dayIndex exists:%d %d\n", dayIndex, len(s.Deaths))
 		s.Deaths[dayIndex] = deaths
 		s.Confirmed[dayIndex] = confirmed
-		s.Recovered[dayIndex] = recovered
 	}
 
 }
@@ -383,6 +360,17 @@ func (slice SeriesSlice) FetchSeries(country string, province string) (*Series, 
 	}
 
 	return &Series{}, fmt.Errorf("series: not found")
+}
+
+// PrintSeries uses our stored data to fetch a series
+func (slice SeriesSlice) PrintSeries(country string, province string) error {
+	s, err := slice.FetchSeries(country, province)
+	if err != nil {
+		log.Printf("error: series err:%s %s", country, err)
+		return err
+	}
+	log.Printf("series:%s,%s %v %v", s.Country, s.Province, s.Confirmed, s.Deaths)
+	return nil
 }
 
 // FetchSeries uses our stored data to fetch a series
@@ -527,21 +515,29 @@ func (slice SeriesSlice) mergeTimeSeriesCSV(records [][]string, dataType int) (S
 			}
 
 			// Walk through row, reading days data after col 3 (longitude)
-			for i, d := range row {
-				if i < 4 {
+			for ii, d := range row {
+				if ii < 4 {
 					continue
 				}
-				v, err := strconv.Atoi(d)
-				if err != nil {
-					return slice, fmt.Errorf("load: error loading row %d - csv day data invalid:%s", i, err)
+				var v int
+				var err error
+				if d != "" {
+					v, err = strconv.Atoi(d)
+					if err != nil {
+						log.Printf("load: error loading series:%s row:%d col:%d row:\n%s\nerror:%s", country, i+1, ii+1, row, err)
+						return slice, fmt.Errorf("load: error loading row %d - csv day data invalid:%s", i+1, err)
+					}
+				} else {
+					// This is typically a clerical error - in this case invalid rows ending in ,
+					// So just quietly ignore it
+					log.Printf("load: missing data for series:%s row:%d col:%d", country, i, ii)
 				}
+
 				switch dataType {
 				case DataDeaths:
 					series.Deaths = append(series.Deaths, v)
 				case DataConfirmed:
 					series.Confirmed = append(series.Confirmed, v)
-				case DataRecovered:
-					series.Recovered = append(series.Recovered, v)
 				}
 			}
 
@@ -598,12 +594,12 @@ func (slice SeriesSlice) mergeDailyCountryCSV(records [][]string, dataType int) 
 			}
 
 			// Get the series data from the row
-			updated, confirmed, deaths, recovered, err := readCountryRow(row)
+			updated, confirmed, deaths, err := readCountryRow(row)
 			if err != nil {
 				return nil, fmt.Errorf("load: error reading row series:%s error:%s", row[0], err)
 			}
 
-			series.AddDayData(dayIndex, updated, confirmed, deaths, recovered)
+			series.AddDayData(dayIndex, updated, confirmed, deaths)
 
 			// After reading row data, recalculate confirmed daily from confirmed
 			// first day is just set to first total after that daily totals are stored
@@ -614,7 +610,7 @@ func (slice SeriesSlice) mergeDailyCountryCSV(records [][]string, dataType int) 
 	return slice, nil
 }
 
-func readCountryRow(row []string) (time.Time, int, int, int, error) {
+func readCountryRow(row []string) (time.Time, int, int, error) {
 
 	// Dates are, remarkably, in two different formats in one file
 	// Try first in the one true format
@@ -623,26 +619,26 @@ func readCountryRow(row []string) (time.Time, int, int, int, error) {
 		// Then try the US format  3/13/2020 22:22
 		updated, err = time.Parse("1/2/2006 15:04", row[1])
 		if err != nil {
-			return updated, 0, 0, 0, fmt.Errorf("load: error reading updated at series:%s error:%s", row[0], err)
+			return updated, 0, 0, fmt.Errorf("load: error reading updated at series:%s error:%s", row[0], err)
 		}
 	}
 
 	confirmed, err := strconv.Atoi(row[4])
 	if err != nil {
-		return updated, 0, 0, 0, fmt.Errorf("load: error reading confirmed series:%s error:%s", row[0], err)
+		return updated, 0, 0, fmt.Errorf("load: error reading confirmed series:%s error:%s", row[0], err)
 	}
 
 	deaths, err := strconv.Atoi(row[5])
 	if err != nil {
-		return updated, 0, 0, 0, fmt.Errorf("load: error reading deaths series:%s error:%s", row[0], err)
+		return updated, 0, 0, fmt.Errorf("load: error reading deaths series:%s error:%s", row[0], err)
 	}
-
-	recovered, err := strconv.Atoi(row[6])
-	if err != nil {
-		return updated, 0, 0, 0, fmt.Errorf("load: error reading recovered series:%s error:%s", row[0], err)
-	}
-
-	return updated, confirmed, deaths, recovered, nil
+	/*
+		recovered, err := strconv.Atoi(row[6])
+		if err != nil {
+			return updated, 0, 0, 0, fmt.Errorf("load: error reading recovered series:%s error:%s", row[0], err)
+		}
+	*/
+	return updated, confirmed, deaths, nil
 }
 
 // mergeDailyStateCSV merges the data in this state daily series CSV with the data we already have in the SeriesSlice
@@ -688,12 +684,12 @@ func (slice SeriesSlice) mergeDailyStateCSV(records [][]string, dataType int) (S
 			}
 
 			// Get the series data from the row
-			updated, confirmed, deaths, recovered, err := readStateRow(row)
+			updated, confirmed, deaths, err := readStateRow(row)
 			if err != nil {
 				return nil, fmt.Errorf("load: error reading row series:%s error:%s", row[1], err)
 			}
 
-			series.AddDayData(dayIndex, updated, confirmed, deaths, recovered)
+			series.AddDayData(dayIndex, updated, confirmed, deaths)
 
 			// After reading row data, recalculate confirmed daily from confirmed
 			// first day is just set to first total after that daily totals are stored
@@ -704,7 +700,7 @@ func (slice SeriesSlice) mergeDailyStateCSV(records [][]string, dataType int) (S
 	return slice, nil
 }
 
-func readStateRow(row []string) (time.Time, int, int, int, error) {
+func readStateRow(row []string) (time.Time, int, int, error) {
 
 	// Dates are, remarkably, in two different formats in one file
 	// Try first in the one true format
@@ -717,25 +713,25 @@ func readStateRow(row []string) (time.Time, int, int, int, error) {
 			// Then try the US format  3/13/2020 22:22
 			updated, err = time.Parse("1/2/2006 15:04", row[3])
 			if err != nil {
-				return updated, 0, 0, 0, fmt.Errorf("load: error reading updated at series:%s error:%s", row[1], err)
+				return updated, 0, 0, fmt.Errorf("load: error reading updated at series:%s error:%s", row[1], err)
 			}
 		}
 	}
 
 	confirmed, err := strconv.Atoi(row[6])
 	if err != nil {
-		return updated, 0, 0, 0, fmt.Errorf("load: error reading confirmed series:%s error:%s", row[1], err)
+		return updated, 0, 0, fmt.Errorf("load: error reading confirmed series:%s error:%s", row[1], err)
 	}
 
 	deaths, err := strconv.Atoi(row[7])
 	if err != nil {
-		return updated, 0, 0, 0, fmt.Errorf("load: error reading deaths series:%s error:%s", row[1], err)
+		return updated, 0, 0, fmt.Errorf("load: error reading deaths series:%s error:%s", row[1], err)
 	}
-
-	recovered, err := strconv.Atoi(row[8])
-	if err != nil {
-		return updated, 0, 0, 0, fmt.Errorf("load: error reading recovered series:%s error:%s", row[1], err)
-	}
-
-	return updated, confirmed, deaths, recovered, nil
+	/*
+		recovered, err := strconv.Atoi(row[8])
+		if err != nil {
+			return updated, 0, 0, 0, fmt.Errorf("load: error reading recovered series:%s error:%s", row[1], err)
+		}
+	*/
+	return updated, confirmed, deaths, nil
 }

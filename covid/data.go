@@ -13,11 +13,14 @@ import (
 	"time"
 )
 
+// Recovered data is no longer available, it was here:
+//	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv",
+// I think this is because US is not reporting recovered cases
+
 var dataPath = "./data"
 var dailyDataFiles = []string{
-	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv",
-	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv",
-	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv",
+	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv",
+	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv",
 	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/web-data/data/cases_state.csv",
 	"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/web-data/data/cases_country.csv",
 }
@@ -78,6 +81,9 @@ func LoadData() error {
 
 	log.Printf("server: loaded data in %s len:%d", time.Now().Sub(start), len(data))
 
+	// For Debug, output a series
+	data.PrintSeries("United Kingdom", "")
+
 	return nil
 }
 
@@ -100,10 +106,8 @@ func loadCSVFile(path string, data SeriesSlice) (SeriesSlice, error) {
 
 	// Set the data type depending on file name
 	dataType := DataDeaths
-	if strings.HasSuffix(path, "Confirmed.csv") {
+	if strings.Contains(path, "confirmed") {
 		dataType = DataConfirmed
-	} else if strings.HasSuffix(path, "Recovered.csv") {
-		dataType = DataRecovered
 	} else if strings.HasSuffix(path, "cases_state.csv") {
 		dataType = DataTodayState
 	} else if strings.HasSuffix(path, "cases_country.csv") {
@@ -147,14 +151,14 @@ func processData(data SeriesSlice) SeriesSlice {
 		Province: "",
 		StartsAt: startDate,
 	}
-
-	// Build a US series
-	US := &Series{
-		Country:  "US",
-		Province: "",
-		StartsAt: startDate,
-	}
-
+	/*
+		// Build a US series
+		US := &Series{
+			Country:  "US",
+			Province: "",
+			StartsAt: startDate,
+		}
+	*/
 	// Build an Australia series
 	Australia := &Series{
 		Country:  "Australia",
@@ -185,12 +189,15 @@ func processData(data SeriesSlice) SeriesSlice {
 			China.Merge(s)
 		}
 
+		// The dataset now includes a US global entry
 		// Build an overall US series
 		// NB this ignores the US sub-state level data which we exclude from the dataset as it is no longer accurate
 		// for newer dates this data is zeroed anyway
-		if s.Country == "US" {
-			US.Merge(s)
-		}
+		/*
+			if s.Country == "US" {
+				US.Merge(s)
+			}
+		*/
 
 		// Build an overall Australia series
 		if s.Country == "Australia" {
@@ -211,7 +218,7 @@ func processData(data SeriesSlice) SeriesSlice {
 	data = append(data, China)
 
 	//	log.Printf("Added US Series:%s %s %v", US.Country, US.Province, US.Confirmed)
-	data = append(data, US)
+	//	data = append(data, US)
 
 	//	log.Printf("Added Australia Series:%s %s %v", Australia.Country, Australia.Province, Australia.Confirmed)
 	data = append(data, Australia)
@@ -243,7 +250,6 @@ func updateGlobal(data SeriesSlice) {
 	// Add a blank day to global
 	global.Deaths = append(global.Deaths, 0)
 	global.Confirmed = append(global.Confirmed, 0)
-	global.Recovered = append(global.Recovered, 0)
 	global.DeathsDaily = append(global.DeathsDaily, 0)
 	global.ConfirmedDaily = append(global.ConfirmedDaily, 0)
 
@@ -276,7 +282,7 @@ func ScheduleDataFetch() {
 	ScheduleAt(FetchDataDaily, when, daily)
 
 	// Schedule an hourly fetch for hourly data
-	when = time.Date(now.Year(), now.Month(), now.Day(), 0, 1, 0, 0, time.UTC)
+	when = time.Date(now.Year(), now.Month(), now.Day(), 0, 5, 0, 0, time.UTC)
 
 	ScheduleAt(FetchDataHourly, when, hourly)
 

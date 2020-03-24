@@ -144,9 +144,6 @@
         <canvas class="chart" id="chartConfirmed" ></canvas>
     </div>
 
-    <div class="chart_container">
-        <canvas class="chart" id="chartRecovered" ></canvas>
-    </div>
 
     {{ if not .series.UpdatedAt.IsZero }}
         <p class="updated_at">{{ .series.UpdatedAtDisplay}}</p>
@@ -185,7 +182,7 @@ var chartOptions = {
             display: true,
             fontSize:fontSize*10,
             fontStyle: 'normal',
-            text: "{{.series.RecoveredDisplay}} Recovered"
+            text: "{{.series.DeathsDisplay}} Deaths"
      },
     scales: {
          xAxes: [{
@@ -242,7 +239,7 @@ var chartDailyDeathsData = {
 
 var chartDailyDeathsCtx = document.getElementById('chartDailyDeaths').getContext('2d');
 chartOptions.title.text = "{{.series.DeathsToday}} Deaths Today";
-var chartRecovered = new Chart(chartDailyDeathsCtx, {
+var chartDailyDeaths = new Chart(chartDailyDeathsCtx, {
     type: 'bar',
     options: chartOptions,
     data: chartDailyDeathsData
@@ -263,7 +260,7 @@ var chartDailyConfirmedData = {
 
 var chartDailyConfirmedCtx = document.getElementById('chartDailyConfirmed').getContext('2d');
 chartOptions.title.text = "{{.series.ConfirmedToday}} Confirmed Cases Today";
-var chartRecovered = new Chart(chartDailyConfirmedCtx, {
+var chartDailyConfirmed = new Chart(chartDailyConfirmedCtx, {
     type: 'bar',
     options: chartOptions,
     data: chartDailyConfirmedData
@@ -312,28 +309,6 @@ var chartConfirmed = new Chart(chartConfirmedCtx, {
     options: chartOptions,
     data: chartConfirmedData
 });
-
-var chartRecoveredData = {
-      "labels":{{.series.Dates}},
-      "datasets":[{
-        "label":"COVID-19 Total Recovered",
-        "data":{{.series.Recovered}},
-        "fill":true,
-        "borderWidth":"0",
-        "backgroundColor":"rgb(54,128,45,0.5)",
-        "lineTension":0.1
-        }]
-}
-
-var chartRecoveredCtx = document.getElementById('chartRecovered').getContext('2d');
-chartOptions.title.text = "{{.series.RecoveredDisplay}} Total Recovered";
-var chartRecovered = new Chart(chartRecoveredCtx, {
-    type: 'line',
-    options: chartOptions,
-    data: chartRecoveredData
-});
-
-
 
 
 
