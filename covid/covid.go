@@ -197,7 +197,8 @@ func (s *Series) AddToGlobal() bool {
 	case "":
 		return false
 	case "US":
-		return false
+		// the US province data is now missing - when added in perhaps remove it here?
+	//	return false
 	case "China":
 		return false
 	case "Australia":
@@ -208,6 +209,7 @@ func (s *Series) AddToGlobal() bool {
 		return true
 	}
 
+	return true
 }
 
 // Format formats a given number for display and returns a string

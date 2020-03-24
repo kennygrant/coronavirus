@@ -4,6 +4,5 @@
     "province"  : "{{e .series.Province}}",
     "dates"     : {{ls .series.Dates}},
     "deaths"    : {{l .series.Deaths}},
-    "confirmed" : {{l .series.Confirmed}},
-    "recovered" : {{l .series.Recovered }}
+    "confirmed" : {{l .series.Confirmed}}
 }
