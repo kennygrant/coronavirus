@@ -158,6 +158,10 @@ func (s *Series) Merge(series *Series) {
 
 // MergeFinalDay merges the final day of data
 func (s *Series) MergeFinalDay(series *Series) error {
+	if len(series.Confirmed) < 2 || len(series.Deaths) < 2 {
+		return nil
+	}
+
 	if len(series.Confirmed) != len(s.Confirmed) {
 		return fmt.Errorf("series: mismatch in days length for:%s", s.Country)
 	}
@@ -254,7 +258,10 @@ func (s *Series) DailyData(start int, ints []int) (daily []int) {
 
 // TotalDeaths returns the cumulative death due to COVID-19 for this series
 func (s *Series) TotalDeaths() int {
-	if len(s.Deaths) > 60 {
+	if len(s.Deaths) == 0 {
+		return 0
+	}
+	if len(s.Deaths) < 2 || len(s.Deaths) > 60 {
 		return s.Deaths[len(s.Deaths)-1]
 	}
 	return s.Deaths[len(s.Deaths)-1] - s.Deaths[0]
@@ -262,7 +269,10 @@ func (s *Series) TotalDeaths() int {
 
 // TotalConfirmed returns the cumulative confirmed cases of COVID-19 for this series
 func (s *Series) TotalConfirmed() int {
-	if len(s.Confirmed) > 60 {
+	if len(s.Confirmed) == 0 {
+		return 0
+	}
+	if len(s.Confirmed) < 2 || len(s.Confirmed) > 60 {
 		return s.Confirmed[len(s.Confirmed)-1]
 	}
 	return s.Confirmed[len(s.Confirmed)-1] - s.Confirmed[0]
@@ -270,6 +280,10 @@ func (s *Series) TotalConfirmed() int {
 
 // Days returns a copy of this series for just the given number of days in the past
 func (s *Series) Days(days int) *Series {
+	if days >= len(s.Deaths) {
+		return s
+	}
+
 	i := len(s.Deaths) - days
 	return &Series{
 		Country:        s.Country,
@@ -500,6 +514,11 @@ func (slice SeriesSlice) mergeTimeSeriesCSV(records [][]string, dataType int) (S
 				continue
 			}
 
+			// Ignore duplicate Virgin Islands
+			if province == "Virgin Islands, U.S." {
+				continue
+			}
+
 			// Fetch the series
 			var series *Series
 			series, _ = slice.FetchSeries(country, province)
@@ -672,6 +691,10 @@ func (slice SeriesSlice) mergeDailyStateCSV(records [][]string, dataType int) (S
 			// Fetch data to match series
 			country := row[2]
 			province := row[1]
+
+			if province == "Virgin Islands, U.S" {
+				continue
+			}
 
 			// There are several province series with bad names or dates which are duplicated in the state level dataset
 			// we therefore ignore them here as the data seems to be out of date anyway
