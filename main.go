@@ -18,7 +18,7 @@ import (
 
 var development = false
 
-// Store our templates globally, don't touch it after server start
+// Store our templates globally, don't touch them after server start
 var htmlTemplate *template.Template
 var jsonTemplate *template.Template
 
@@ -44,7 +44,6 @@ func main() {
 		log.Fatalf("server: failed to load data:%s", err)
 	}
 
-	// Fetch all data again on first load
 	go covid.FetchData()
 
 	// Load our template files into memory
@@ -57,6 +56,7 @@ func main() {
 	// Start a server on port 443 (or another port if dev specified)
 	if development {
 		// In development just serve with http on local port 3000
+		// reload templates on each page load
 		err := http.ListenAndServe(":3000", nil)
 		if err != nil {
 			log.Fatal(err)
@@ -100,7 +100,22 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Limit by period if necessary
+	// Get the total counts first for the page
+	allTimeDeaths := series.Format(series.TotalDeaths())
+	allTimeConfirmed := series.Format(series.TotalConfirmed())
+
+	// Use a default period depending on device if none selected
+	if period == 0 {
+		// Default to last 56 days
+		period = 56
+
+		// Default to 28 days later for phones
+		if strings.Contains(strings.ToLower(r.UserAgent()), "mobile") {
+			period = 28
+		}
+	}
+
+	// Limit by period if applied
 	if period > 0 {
 		series = series.Days(period)
 	}
@@ -111,17 +126,19 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 
 	// Set up context with data
 	context := map[string]interface{}{
-		"period":          strconv.Itoa(period),
-		"country":         series.Key(series.Country),
-		"province":        series.Key(series.Province),
-		"series":          series,
-		"periodOptions":   covid.PeriodOptions(),
-		"countryOptions":  covid.CountryOptions(),
-		"provinceOptions": covid.ProvinceOptions(series.Country),
-		"jsonURL":         jsonURL,
+		"period":           strconv.Itoa(period),
+		"country":          series.Key(series.Country),
+		"province":         series.Key(series.Province),
+		"series":           series,
+		"allTimeDeaths":    allTimeDeaths,
+		"allTimeConfirmed": allTimeConfirmed,
+		"periodOptions":    covid.PeriodOptions(),
+		"countryOptions":   covid.CountryOptions(),
+		"provinceOptions":  covid.ProvinceOptions(series.Country),
+		"jsonURL":          jsonURL,
 	}
 
-	// If in development reload templates each time
+	// If in development reload templates each time - no mutex as in dev only
 	if development {
 		loadTemplates()
 	}

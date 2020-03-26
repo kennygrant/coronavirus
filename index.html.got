@@ -24,7 +24,36 @@
         text-align:center;
         padding:0.5rem;
         margin:0;
-        font-size:2.5em;
+        font-size:2.2em;
+    }
+    h2 {
+        font-weight:100;
+        text-align:center;
+        padding:0.5rem;
+        margin:0;
+        font-size:1.4em;
+    }
+    h3 {
+        font-weight:100;
+        text-align:center;
+        padding-top:1rem;
+         margin:0;
+    }
+    h3.confirmed {
+      color:rgba(163,32,32,0.7);
+    }
+    h4 {
+        margin:0;
+        font-weight:100;
+        text-align:center;
+        color:#777;
+    }
+
+    h2 .deaths {
+         color:rgba(10, 0, 0,0.7);
+    }
+    h2 .confirmed {
+        color:rgba(163,32,32,0.7);
     }
     .filters {
         padding:0.5rem 1rem;
@@ -49,8 +78,9 @@
     }
     .chart_container {
         position: relative;
-        height:26vh;
+        height:36vh;
     }
+   
     footer {
         display:block;
         clear:both;
@@ -58,6 +88,8 @@
         font-size:0.6em;
     }
     .updated_at {
+        clear:both;
+           margin:1rem 0;
         text-align:center;
         font-size:0.9em;
     }
@@ -74,10 +106,23 @@
         text-decoration:none;
         padding:0.25rem 0.5rem;
     }
-    @media(max-width:1000px) {
+
+
+    /* Phones/Slates in portrait */
+    @media(max-width:1000px) and (orientation : portrait) {
         h1 {
             font:3em/1.2em "Open Sans", sans-serif;
             margin:1rem 0;
+        }
+        h2 {
+            font-size:2em;
+             margin:1rem 0;
+        }
+        h3 {
+            margin:2rem 0 0 0;
+        }
+        h4 {
+            margin:1rem 0 0 0;
         }
 
         select {
@@ -87,13 +132,28 @@
 
         .chart_container {
             position: relative;
-            height:36vh;
+            height:26vh;
+               margin-bottom:2rem;
+         }
+         .buttons {
+             margin:2rem 0;
          }
 
-         .chart {
-           margin-top:2.5rem;
+         .button {
+             font-size:0.8em;
+             padding:0.25rem 1rem;
          }
     }
+
+    /* Phones/Slates in landscape */
+    @media(max-width:2000px) and (orientation : landscape) {
+         .chart_container {
+            position: relative;
+            height:46vh;
+         }
+
+    }
+  
 </style>
 
 </head>
@@ -101,7 +161,8 @@
 <body>
 
     <header>
-    <h1><span id="chart_title">{{.series.Title}}</span> Coronavirus Cases</h1>
+    <h1><span id="chart_title">{{.series.Title}}</span> Coronavirus</h1>
+    <h2><span class="deaths">{{.allTimeDeaths}} Deaths</span> &nbsp; <span class="confirmed">{{.allTimeConfirmed}} Confirmed</span></h2>
     </header>
     
     <article>
@@ -130,16 +191,25 @@
     </form>
 
 
+    <h3 class="deaths">{{.series.Format .series.DeathsToday }} Deaths in {{.series.LastHours}} hours</h3>
+    <h4>{{.series.Format .series.AverageDeaths}} 5 day average</h4>
     <div class="chart_container">
         <canvas class="chart" id="chartDailyDeaths" ></canvas>
     </div>
+
+    <h3 class="deaths">{{.series.Format .series.TotalDeaths}} Deaths</h3>
+    <h4>in {{.series.Count}} days, 2x in {{.series.DoubleDeathDays}} days</h4>
     <div class="chart_container">
         <canvas class="chart" id="chartDeaths" ></canvas>
     </div>
 
+    <h3 class="confirmed">{{.series.Format .series.ConfirmedToday }} Confirmed in {{.series.LastHours}} hours</h3>
+    <h4>{{.series.Format .series.AverageConfirmed}} 5 day average</h4>
     <div class="chart_container">
         <canvas class="chart" id="chartDailyConfirmed" ></canvas>
     </div>
+    <h3 class="confirmed">{{.series.Format .series.TotalConfirmed}} Confirmed</h3>
+    <h4>in {{.series.Count}} days, 2x in {{.series.DoubleDeathDays}} days</h4>
     <div class="chart_container">
         <canvas class="chart" id="chartConfirmed" ></canvas>
     </div>
@@ -148,6 +218,7 @@
     {{ if not .series.UpdatedAt.IsZero }}
         <p class="updated_at">{{ .series.UpdatedAtDisplay}}</p>
     {{ end }}
+
 
     <div class="buttons">
     <a href="{{.jsonURL}}" class="button">JSON Feed</a> <a href="https://github.com/kennygrant/coronavirus" class="button">About</a>
@@ -163,26 +234,28 @@
 <script>
 
 /* Determine font size based on device */
-var fontSize  = 5;
-var maxTicks = 12;
 
-if (document.body.clientWidth > 1000) {
-    fontSize = 2;
-    maxTicks = 30;
-    console.log("small font")
+var fontSize = 2;
+var maxTicks = 56;
+
+if (document.body.clientWidth < 1100) {
+    fontSize = 2.5;
+    maxTicks = 28;
 }
 
-if (document.body.clientWidth > 1500) {
-    fontSize = 2;
-    maxTicks = 70;
+if (document.body.clientWidth < 1000) {
+    fontSize  = 3;
+    maxTicks = 28;
+}
+
+if ((document.body.clientWidth < 1000) && (window.matchMedia("(orientation: portrait)").matches)) {
+    fontSize  = 5;
+    maxTicks = 12;
 }
 
 var chartOptions = {
     title: {
-            display: true,
-            fontSize:fontSize*10,
-            fontStyle: 'normal',
-            text: "{{.series.DeathsDisplay}} Deaths"
+            display: false,
      },
     scales: {
          xAxes: [{
@@ -232,13 +305,13 @@ var chartDailyDeathsData = {
         "data":{{.series.DeathsDaily}},
         "fill":true,
         "borderWidth":"0",
-        "backgroundColor":"rgb(70, 30, 30,0.7)",
+        "backgroundColor":"rgba(10, 0, 0,0.7)",
         "lineTension":0.1
         }]
 }
 
 var chartDailyDeathsCtx = document.getElementById('chartDailyDeaths').getContext('2d');
-chartOptions.title.text = "{{.series.DeathsToday}} Deaths Today";
+
 var chartDailyDeaths = new Chart(chartDailyDeathsCtx, {
     type: 'bar',
     options: chartOptions,
@@ -253,13 +326,12 @@ var chartDailyConfirmedData = {
         "data":{{.series.ConfirmedDaily}},
         "fill":true,
         "borderWidth":"0",
-        "backgroundColor":"rgb(163,32,32,0.7)",
+        "backgroundColor":"rgba(163,32,32,0.7)",
         "lineTension":0.1
         }]
 }
 
 var chartDailyConfirmedCtx = document.getElementById('chartDailyConfirmed').getContext('2d');
-chartOptions.title.text = "{{.series.ConfirmedToday}} Confirmed Cases Today";
 var chartDailyConfirmed = new Chart(chartDailyConfirmedCtx, {
     type: 'bar',
     options: chartOptions,
@@ -271,17 +343,16 @@ var chartDailyConfirmed = new Chart(chartDailyConfirmedCtx, {
 var chartDeathsData = {
     "labels":{{.series.Dates}},
     "datasets":[{
-        "label":"COVID-19 Total Deaths",
+        "label":"COVID-19 Deaths",
         "data":{{.series.Deaths}},
         "fill":true,
         "borderWidth":"0",
-        "backgroundColor":"rgb(70, 30, 30,0.7)",
+        "backgroundColor":"rgba(10, 0, 0,0.7)",
         "lineTension":0.1
         }]
 }
 
 var chartDeathsCtx = document.getElementById('chartDeaths').getContext('2d');
-chartOptions.title.text =  "{{.series.DeathsDisplay}} Total Deaths";
 var chartDeaths = new Chart(chartDeathsCtx, {
     type: 'line',
     options: chartOptions,
@@ -297,13 +368,12 @@ var chartConfirmedData = {
         "data":{{.series.Confirmed}},
         "fill":true,
          "borderWidth":"0",
-        "backgroundColor":"rgb(163,32,32,0.7)",
+        "backgroundColor":"rgba(163,32,32,0.7)",
         "lineTension":0.1
         }]
 }
 
 var chartConfirmedCtx = document.getElementById('chartConfirmed').getContext('2d');
-chartOptions.title.text = "{{.series.ConfirmedDisplay}} Total Confirmed";
 var chartConfirmed = new Chart(chartConfirmedCtx, {
     type: 'line',
     options: chartOptions,

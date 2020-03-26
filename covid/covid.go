@@ -74,6 +74,76 @@ func (s *Series) Dates() (dates []string) {
 	return dates
 }
 
+// LastHours returns the number of hours that have passed since 0 UTC
+func (s *Series) LastHours() int {
+	return time.Now().UTC().Hour()
+}
+
+// Count returns count of days in the series
+// all data is assumed to have the same count
+func (s *Series) Count() int {
+	return len(s.Deaths)
+}
+
+// AverageDeaths returns the average deaths per day over the last 3 days
+func (s *Series) AverageDeaths() int {
+	// Use last 5 days (including today, which may be incomplete)
+	i := len(s.DeathsDaily) - 5
+	if i < 0 {
+		i = 0
+	}
+	deaths := s.DeathsDaily[i:]
+	var sum int
+	for _, v := range deaths {
+		sum += v
+	}
+	return sum / len(deaths)
+}
+
+// AverageConfirmed returns the average deaths per day over the last 3 days
+func (s *Series) AverageConfirmed() int {
+	// Use last 5 days (including today, which may be incomplete)
+	i := len(s.ConfirmedDaily) - 5
+	if i < 0 {
+		i = 0
+	}
+	confirmed := s.ConfirmedDaily[i:]
+	var sum int
+	for _, v := range confirmed {
+		sum += v
+	}
+	return sum / len(confirmed)
+}
+
+// DoubleDeathDays returns the number of days it took to double deaths
+// ignoring incomplete figures for today
+func (s *Series) DoubleDeathDays() (days int) {
+	i := s.Count() - 1
+	half := s.Deaths[i] / 2
+	for i--; i >= 0; i-- {
+		days++
+		if s.Deaths[i] < half {
+			break
+		}
+	}
+	// Return the number of days required to halve count
+	return days
+}
+
+// DoubleConfirmedDays returns the number of days it took to double cases
+func (s *Series) DoubleConfirmedDays() (days int) {
+	i := s.Count() - 1
+	half := s.Confirmed[i] / 2
+	for i--; i >= 0; i-- {
+		days++
+		if s.Confirmed[i] < half {
+			break
+		}
+	}
+	// Return the number of days required to at least halve count
+	return days
+}
+
 // FetchDate retuns the data for the given date from datum
 func (s *Series) FetchDate(datum int, date time.Time) int {
 
@@ -216,32 +286,21 @@ func (s *Series) AddToGlobal() bool {
 func (s *Series) Format(i int) string {
 	if i < 10000 {
 		return fmt.Sprintf("%d", i)
+	} else if i < 1000000 {
+		return fmt.Sprintf("%.1fk", float64(i)/1000)
 	}
 
-	if i < 1000000 {
-		return fmt.Sprintf("%.2fk", float64(i)/1000)
-	}
-	return fmt.Sprintf("%.2fm", float64(i)/1000000)
+	return fmt.Sprintf("%.1fm", float64(i)/1000000)
 }
 
-// DeathsDisplay returns a string representation of TotalDeaths
-func (s *Series) DeathsDisplay() string {
-	return s.Format(s.TotalDeaths())
+// ConfirmedToday returns confirmed for last data in series
+func (s *Series) ConfirmedToday() int {
+	return s.ConfirmedDaily[len(s.ConfirmedDaily)-1]
 }
 
-// ConfirmedDisplay returns a string representation of TotalConfirmed
-func (s *Series) ConfirmedDisplay() string {
-	return s.Format(s.TotalConfirmed())
-}
-
-// ConfirmedToday returns a string representation of confirmed for last data in series
-func (s *Series) ConfirmedToday() string {
-	return s.Format(s.ConfirmedDaily[len(s.ConfirmedDaily)-1])
-}
-
-// DeathsToday returns a string representation of deaths for last data in series
-func (s *Series) DeathsToday() string {
-	return s.Format(s.DeathsDaily[len(s.DeathsDaily)-1])
+// DeathsToday returns deaths for last data in series
+func (s *Series) DeathsToday() int {
+	return s.DeathsDaily[len(s.DeathsDaily)-1]
 }
 
 // DailyData - for a given series of cumulative total ints,
@@ -413,7 +472,7 @@ func ProvinceOptions(country string) (options []Option) {
 // PeriodOptions returns a set of options for period filters
 func PeriodOptions() (options []Option) {
 
-	options = append(options, Option{Name: "All Time", Value: "0"})
+	options = append(options, Option{Name: "All Time", Value: "-1"})
 	options = append(options, Option{Name: "112 Days", Value: "112"})
 	options = append(options, Option{Name: "56 Days", Value: "56"})
 	options = append(options, Option{Name: "28 Days", Value: "28"})
