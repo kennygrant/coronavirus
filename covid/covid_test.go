@@ -9,10 +9,13 @@ import (
 func TestFetchData(t *testing.T) {
 	// change dir back to root
 	os.Chdir("..")
-	err := FetchData()
+	FetchData()
+
+	err := LoadData()
 	if err != nil {
 		t.Fatalf("error fetching data:%s", err)
 	}
+
 }
 
 func TestLoadData(t *testing.T) {

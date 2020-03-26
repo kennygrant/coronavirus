@@ -330,19 +330,22 @@ func FetchDataHourly() {
 
 // FetchData fetches data from our data sources
 // for more frequent updates, we could look at downloading the case data
-func FetchData() error {
+func FetchData() {
 
 	// First download the 3 x files we need from github master branch to our data dir
 	err := DownloadFiles(dailyDataFiles, dataPath)
 	if err != nil {
-		return err
+		log.Printf("download: error downloading files:%s", err)
 	}
 
 	// Allow a pause after requests to save data to disk
 	time.Sleep(1 * time.Second)
 
-	// Trigger a reload of the data from our standard data path
-	return LoadData()
+	err = LoadData()
+	if err != nil {
+		log.Printf("server: failed to load data:%s", err)
+	}
+
 }
 
 // DownloadFiles downloads the specified url to the specified file path

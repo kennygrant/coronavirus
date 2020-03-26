@@ -38,19 +38,14 @@ func main() {
 	// Schedule a regular fetch of data at a specified time daily
 	covid.ScheduleDataFetch()
 
-	/*
-		// For testing, test a fetch instead
-		err := covid.FetchData()
-		if err != nil {
-			log.Fatalf("server: failed to load data:%s", err)
-		}
-	*/
-
-	// Load the data
+	// Load the data first
 	err := covid.LoadData()
 	if err != nil {
 		log.Fatalf("server: failed to load data:%s", err)
 	}
+
+	// Fetch all data again on first load
+	go covid.FetchData()
 
 	// Load our template files into memory
 	loadTemplates()
@@ -62,7 +57,7 @@ func main() {
 	// Start a server on port 443 (or another port if dev specified)
 	if development {
 		// In development just serve with http on local port 3000
-		err = http.ListenAndServe(":3000", nil)
+		err := http.ListenAndServe(":3000", nil)
 		if err != nil {
 			log.Fatal(err)
 		}
