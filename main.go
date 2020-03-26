@@ -43,8 +43,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("server: failed to load data:%s", err)
 	}
-
-	go covid.FetchData()
+	// Fetch all data again on first load in production
+	// don't do this in dev normally
+	if !development {
+		go covid.FetchData()
+	}
 
 	// Load our template files into memory
 	loadTemplates()
