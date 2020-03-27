@@ -161,7 +161,7 @@
 </head>
 
 <body>
-   
+    <a name="top"></a>
     <header>
     <h1><span id="chart_title">{{.series.Title}}</span> Coronavirus</h1>
     <h2><span class="deaths">{{.allTimeDeaths}} Deaths</span> &nbsp; <span class="confirmed">{{.allTimeConfirmed}} Confirmed</span></h2>
@@ -192,30 +192,37 @@
         </select>
     </form>
 
+    <a name="deaths_daily"></a>
     <h3 class="deaths">{{.series.Format .series.DeathsToday }} Deaths reported in last {{.series.LastHours}} hours</h3>
     <h4>{{.series.Format .series.AverageDeaths}} Deaths 5 day average</h4>
     <div class="chart_container">
         <canvas class="chart" id="chartDailyDeaths" ></canvas>
     </div>
 
+    <a name="deaths"></a>
     <h3 class="deaths">{{.series.Format .series.TotalDeaths}} Deaths</h3>
     <h4>in {{.series.Count}} days, 2x in {{.series.DoubleDeathDays}} days</h4>
     <div class="chart_container">
         <canvas class="chart" id="chartDeaths" ></canvas>
     </div>
 
+    <a name="confirmed_daily"></a>
     <h3 class="confirmed">{{.series.Format .series.ConfirmedToday }} Confirmed in last {{.series.LastHours}} hours</h3>
     <h4>{{.series.Format .series.AverageConfirmed}} Cases 5 day average</h4>
     <div class="chart_container">
         <canvas class="chart" id="chartDailyConfirmed" ></canvas>
     </div>
+
+    <a name="confirmed"></a>
     <h3 class="confirmed">{{.series.Format .series.TotalConfirmed}} Confirmed</h3>
     <h4>in {{.series.Count}} days, 2x in {{.series.DoubleDeathDays}} days</h4>
     <div class="chart_container">
         <canvas class="chart" id="chartConfirmed" ></canvas>
     </div>
 
+   
     {{ if gt (len .comparisons) 0 }}
+        <a name="growth"></a>
         <h3 class="confirmed">Growth Comparison</h3>
         <h4>Growth in deaths from day of death {{.startDeaths}}</h4>
         <div class="chart_container larger">
