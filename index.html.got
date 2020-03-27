@@ -81,7 +81,7 @@
         height:36vh;
     }
     .chart_container.larger {
-        height:100vh; 
+        height:90vh; 
     }
    
     footer {
@@ -136,7 +136,10 @@
         .chart_container {
             position: relative;
             height:26vh;
-               margin-bottom:2rem;
+            margin-bottom:2rem;
+         }
+         .chart_container.larger {
+              height:40vh; 
          }
          .buttons {
              margin:2rem 0;
@@ -411,6 +414,10 @@ var chartComparisonOptions = {
             position:'top',
             display:true,
             text:'Click to hide'
+        },
+        labels: {
+            padding:fontSize*6,
+            fontSize:fontSize*5,
         }
     },
     scales: {
