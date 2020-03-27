@@ -130,8 +130,8 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 
 	//log.Printf("request:%s country:%s province:%s period:%d", r.URL, country, province, period)
 
-	// Compare growth rate of top ten series
-	comparisons := covid.TopTenSeries(series.Country)
+	// Compare growth rate of top 20 series
+	comparisons := covid.TopSeries(series.Country, 20)
 
 	// Set up context with data
 	context := map[string]interface{}{

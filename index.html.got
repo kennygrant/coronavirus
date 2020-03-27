@@ -331,7 +331,6 @@ var chartComparisonOptions = {
            type: '{{.scale}}',
            position: "right",
            ticks: {
-                max:10000,
                 autoSkip: true,
                 maxTicksLimit: 5,
                 fontSize:fontSize*5,
@@ -434,6 +433,35 @@ var chartConfirmed = new Chart(chartConfirmedCtx, {
 });
 
 {{ if gt (len .comparisons) 0 }}
+
+var colorValues = [
+	[209, 17, 65],
+	[0, 177, 89],
+	[0, 174, 219],
+	[243, 119, 53],
+	[255, 40, 40],
+	[100, 85, 236],
+	[255, 193, 0],
+	[123, 179, 255],
+	[232, 106, 240],
+	[201, 223, 138],
+	[209, 17, 65],
+	[209, 17, 65],
+	[209, 57, 165],
+	[109, 17, 65],
+	[100, 177, 89],
+	[130, 174, 219],
+	[143, 119, 53],
+	[155, 40, 40],
+	[200, 85, 236],
+	[155, 193, 0],
+	[23, 179, 255],
+	[132, 106, 240],
+	[101, 223, 138],
+	[109, 57, 165]
+];
+
+
 var chartComparisonDeathsData = {
       "labels":{{ (index .comparisons 0).DaysFrom .startDeaths }},
       "datasets":[
@@ -448,9 +476,9 @@ var chartComparisonDeathsData = {
             pointRadius: 3,
 			pointHoverRadius: 7,
             borderWidth:"1",
-            color:"rgba({{.ColorValues $i}})",
-            borderColor:"rgba({{.ColorValues $i}})",
-            backgroundColor:"rgba({{.ColorValues $i}})",
+            color:"rgb("+colorValues[{{$i}}]+")",
+            borderColor:"rgb("+colorValues[{{$i}}]+")",
+            backgroundColor:"rgb("+colorValues[{{$i}}]+")",
             lineTension:0.1
             }
        {{ end }}]

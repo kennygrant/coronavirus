@@ -425,49 +425,6 @@ func (s *Series) AddDayData(dayIndex int, updated time.Time, confirmed, deaths i
 
 }
 
-var colorPalette = [][]int{
-	[]int{209, 17, 65},
-	[]int{0, 177, 89},
-	[]int{0, 174, 219},
-	[]int{243, 119, 53},
-	[]int{255, 40, 40},
-	[]int{100, 85, 236},
-	[]int{255, 193, 0},
-	[]int{123, 179, 255},
-	[]int{232, 106, 240},
-	[]int{201, 223, 138},
-	[]int{209, 17, 65},
-	[]int{209, 17, 65},
-	[]int{209, 17, 65},
-}
-
-// ColorValues returns rgb colour values
-func (s *Series) ColorValues(index int) string {
-	/*
-		r := clampColor(index * 25)
-		g := clampColor(int(255 / (1 + (float64(index) * 0.5))))
-		b := clampColor(index * (55/1 + index))
-		log.Printf("%d,%d,%d,1.0", r, g, b)
-	*/
-	if index < 0 || index > 10 {
-		index = 0
-	}
-	r := colorPalette[index][0]
-	g := colorPalette[index][1]
-	b := colorPalette[index][2]
-	return fmt.Sprintf("%d,%d,%d,1.0", r, g, b)
-}
-
-func clampColor(i int) int {
-	if i > 250 {
-		return 250
-	}
-	if i < 0 {
-		return 0
-	}
-	return i
-}
-
 // SLICE OF Series
 
 // SeriesSlice is a collection of Series
@@ -521,15 +478,13 @@ func (slice SeriesSlice) PrintSeries(country string, province string) error {
 	return nil
 }
 
-// TopTenSeries selects the top ten series by deaths
-func TopTenSeries(country string) SeriesSlice {
+// TopSeries selects the top n series by deaths
+func TopSeries(country string, n int) SeriesSlice {
 	mutex.RLock()
 	defer mutex.RUnlock()
 
-	maxCount := 11
-	if country == "" {
-		maxCount = 12
-	}
+	// since we exclude global
+	maxCount := n + 1
 
 	// Need to get those matching country
 	var collection SeriesSlice
@@ -538,11 +493,9 @@ func TopTenSeries(country string) SeriesSlice {
 			break
 		}
 
-		// Exclude global and china?
-		if country == "" {
-			if s.Country == "" || s.Country == "China" {
-				continue
-			}
+		// Exclude global counts?
+		if s.Country == "" {
+			continue
 		}
 
 		if country == "" && s.Province == "" {
