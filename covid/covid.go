@@ -363,6 +363,17 @@ func (s *Series) Days(days int) *Series {
 	}
 }
 
+// Description returns a string descrpition of form Provinc (Country) or Country
+func (s *Series) Description() string {
+	if s.Country == "" && s.Province == "" {
+		return "Global"
+	} else if s.Province == "" {
+		return s.Country
+	} else {
+		return fmt.Sprintf("%s (%s)", s.Province, s.Country)
+	}
+}
+
 // DaysFrom returns day counts from DeathsFrom numbers
 func (s *Series) DaysFrom(n int) []string {
 	// Get DeathsFrom

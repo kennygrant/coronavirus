@@ -313,50 +313,6 @@ var chartOptions = {
 }
 
 
-var chartComparisonOptions = {
-    title: {
-            display: false,
-     },
-    legend: {
-        position:{{ if .mobile}}'bottom'{{else}}'right'{{end}},
-        pointStyle: 'dot',
-        usePointStyle: true,
-    },
-    scales: {
-         xAxes: [{
-            ticks: {
-                padding:10,
-                fontSize:fontSize*5
-            },
-            gridLines: {
-                zeroLineWidth:0,
-                color:"rgba(255, 255, 255,0)",
-                lineWidth: 0
-            }
-         }],
-         yAxes: [{
-           type: '{{.scale}}',
-           position: "right",
-           ticks: {
-                autoSkip: true,
-                maxTicksLimit: 5,
-                fontSize:fontSize*5,
-                callback: function(value, index, values) {
-                    if (value >= 1000) {
-                        return value / 1000 + 'k';
-                    }
-                    return value;
-                }
-            },
-            gridLines: {
-                color:"rgba(230, 230, 230,0.5)",
-                lineWidth: 1
-            }
-         }]
-    },
-    maintainAspectRatio:false
-}
-
 var chartDailyDeathsData = {
       "labels":{{.series.Dates}},
       "datasets":[{
@@ -439,21 +395,72 @@ var chartConfirmed = new Chart(chartConfirmedCtx, {
     data: chartConfirmedData
 });
 
+
 {{ if gt (len .comparisons) 0 }}
+{{/* Only show if we have comparison data for this dataset */}}
+
+var chartComparisonOptions = {
+    title: {
+            display: false,
+     },
+    legend: {
+        display:true,
+        align:'start',
+        position:{{ if .mobile}}'bottom'{{else}}'right'{{end}},
+        title: {
+            position:'top',
+            display:true,
+            text:'Click to hide'
+        }
+    },
+    scales: {
+         xAxes: [{
+            ticks: {
+                padding:10,
+                fontSize:fontSize*5
+            },
+            gridLines: {
+                zeroLineWidth:0,
+                color:"rgba(255, 255, 255,0)",
+                lineWidth: 0
+            }
+         }],
+         yAxes: [{
+           type: '{{.scale}}',
+           position: "right",
+           ticks: {
+                autoSkip: true,
+                maxTicksLimit: 5,
+                fontSize:fontSize*5,
+                callback: function(value, index, values) {
+                    if (value >= 1000) {
+                        return value / 1000 + 'k';
+                    }
+                    return value;
+                }
+            },
+            gridLines: {
+                color:"rgba(230, 230, 230,0.5)",
+                lineWidth: 1
+            }
+         }]
+    },
+    maintainAspectRatio:false
+}
 
 var colorValues = [
 	[209, 17, 65],
 	[0, 177, 89],
 	[0, 174, 219],
 	[243, 119, 53],
-	[255, 40, 40],
 	[100, 85, 236],
+    [255, 40, 40],
 	[255, 193, 0],
 	[123, 179, 255],
 	[232, 106, 240],
-	[201, 223, 138],
-	[209, 17, 65],
-	[209, 17, 65],
+	[49, 150, 138],
+    [0, 255, 65],
+	[200, 200, 200],
 	[209, 57, 165],
 	[109, 17, 65],
 	[100, 177, 89],
@@ -463,30 +470,25 @@ var colorValues = [
 	[200, 85, 236],
 	[155, 193, 0],
 	[23, 179, 255],
-	[132, 106, 240],
+	[2, 106, 240],
 	[101, 223, 138],
 	[109, 57, 165]
 ];
 
-
 var chartComparisonDeathsData = {
-      "labels":{{ (index .comparisons 0).DaysFrom .startDeaths }},
-      "datasets":[
+      labels:{{ (index .comparisons 0).DaysFrom .startDeaths }},
+      datasets:[
       {{ range $i,$s := .comparisons}}{{if not (eq $i 0) }},{{end}}{
-            {{if eq .Province ""}}
-                label:"{{.Country}} Deaths",
-            {{ else }}
-                label:"{{.Province}}, {{.Country}} Deaths",
-             {{ end }}
-            data:{{ .DeathsFrom $.startDeaths }},
-            fill:false,
+            fill: false,
+            lineTension:0.1,
             pointRadius: 3,
 			pointHoverRadius: 7,
-            borderWidth:"1",
+            borderWidth: 1,
             color:"rgb("+colorValues[{{$i}}]+")",
             borderColor:"rgb("+colorValues[{{$i}}]+")",
             backgroundColor:"rgb("+colorValues[{{$i}}]+")",
-            lineTension:0.1
+            label: {{ .Description }},
+            data: {{ .DeathsFrom $.startDeaths }}
             }
        {{ end }}]
 }
