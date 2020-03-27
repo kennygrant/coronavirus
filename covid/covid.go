@@ -494,29 +494,32 @@ func TopSeries(country string, n int) SeriesSlice {
 	mutex.RLock()
 	defer mutex.RUnlock()
 
-	// since we exclude global
-	maxCount := n + 1
+	// Since we exclude global, we want a count of
+	var count int
 
 	// Need to get those matching country
 	var collection SeriesSlice
-	for i, s := range data {
-		if i > maxCount {
+	for _, s := range data {
+		if count >= n {
 			break
 		}
 
-		// Exclude global counts?
-		if s.Country == "" {
+		// Exclude global series
+		if s.Global() {
 			continue
 		}
 
 		if country == "" && s.Province == "" {
+			// Append all *countries* if country is blank
 			collection = append(collection, s)
+			count++
 		} else if s.Country == country && s.Province != "" {
+			// Else in a country so append any provinces for that country
 			collection = append(collection, s)
+			count++
 		}
 	}
 
-	// Reverse the collection
 	return collection
 }
 
