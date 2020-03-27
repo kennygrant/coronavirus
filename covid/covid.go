@@ -177,10 +177,16 @@ func (s *Series) Key(v string) string {
 	return strings.Replace(strings.ToLower(v), " ", "-", -1)
 }
 
-// Match returns true if this series matches data from a row
+// Match returns true if this series matches country and province
 // performs a case insensitive match
 func (s *Series) Match(country string, province string) bool {
 	return s.Key(s.Country) == s.Key(country) && s.Key(s.Province) == s.Key(province)
+}
+
+// MatchCountry return true if this series matches country
+// performs a case insensitive match
+func (s *Series) MatchCountry(country string) bool {
+	return s.Key(s.Country) == s.Key(country)
 }
 
 // Merge the data from the incoming series with ours
@@ -357,6 +363,30 @@ func (s *Series) Days(days int) *Series {
 	}
 }
 
+// DaysFrom returns day counts from DeathsFrom numbers
+func (s *Series) DaysFrom(n int) []string {
+	// Get DeathsFrom
+	deaths := s.DeathsFrom(n)
+
+	// Build a set of labels for these deaths counting from day 1
+	var days []string
+	for i := range deaths {
+		days = append(days, fmt.Sprintf("Day %d", i+1))
+	}
+	return days
+}
+
+// DeathsFrom returns series after death number n
+func (s *Series) DeathsFrom(n int) []int {
+	// Walk through deaths looking for death n, then return series from that day
+	for i, d := range s.Deaths {
+		if d >= n {
+			return s.Deaths[i : len(s.Deaths)-1]
+		}
+	}
+	return nil
+}
+
 // UpdateDaily updates the confirmed daily based on a new set of values for Confirmed
 func (s *Series) UpdateDaily() {
 	s.DeathsDaily = make([]int, len(s.Deaths))
@@ -393,6 +423,49 @@ func (s *Series) AddDayData(dayIndex int, updated time.Time, confirmed, deaths i
 		s.Confirmed[dayIndex] = confirmed
 	}
 
+}
+
+var colorPalette = [][]int{
+	[]int{209, 17, 65},
+	[]int{0, 177, 89},
+	[]int{0, 174, 219},
+	[]int{243, 119, 53},
+	[]int{255, 40, 40},
+	[]int{100, 85, 236},
+	[]int{255, 193, 0},
+	[]int{123, 179, 255},
+	[]int{232, 106, 240},
+	[]int{201, 223, 138},
+	[]int{209, 17, 65},
+	[]int{209, 17, 65},
+	[]int{209, 17, 65},
+}
+
+// ColorValues returns rgb colour values
+func (s *Series) ColorValues(index int) string {
+	/*
+		r := clampColor(index * 25)
+		g := clampColor(int(255 / (1 + (float64(index) * 0.5))))
+		b := clampColor(index * (55/1 + index))
+		log.Printf("%d,%d,%d,1.0", r, g, b)
+	*/
+	if index < 0 || index > 10 {
+		index = 0
+	}
+	r := colorPalette[index][0]
+	g := colorPalette[index][1]
+	b := colorPalette[index][2]
+	return fmt.Sprintf("%d,%d,%d,1.0", r, g, b)
+}
+
+func clampColor(i int) int {
+	if i > 250 {
+		return 250
+	}
+	if i < 0 {
+		return 0
+	}
+	return i
 }
 
 // SLICE OF Series
@@ -446,6 +519,41 @@ func (slice SeriesSlice) PrintSeries(country string, province string) error {
 	}
 	log.Printf("series:%s,%s %v %v", s.Country, s.Province, s.Confirmed, s.Deaths)
 	return nil
+}
+
+// TopTenSeries selects the top ten series by deaths
+func TopTenSeries(country string) SeriesSlice {
+	mutex.RLock()
+	defer mutex.RUnlock()
+
+	maxCount := 11
+	if country == "" {
+		maxCount = 12
+	}
+
+	// Need to get those matching country
+	var collection SeriesSlice
+	for i, s := range data {
+		if i > maxCount {
+			break
+		}
+
+		// Exclude global and china?
+		if country == "" {
+			if s.Country == "" || s.Country == "China" {
+				continue
+			}
+		}
+
+		if country == "" && s.Province == "" {
+			collection = append(collection, s)
+		} else if s.Country == country && s.Province != "" {
+			collection = append(collection, s)
+		}
+	}
+
+	// Reverse the collection
+	return collection
 }
 
 // FetchSeries uses our stored data to fetch a series

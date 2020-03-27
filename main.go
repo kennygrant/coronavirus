@@ -123,22 +123,31 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		series = series.Days(period)
 	}
 
+	scale := "linear"
+	if param(r, "scale") == "log" {
+		scale = "logarithmic"
+	}
+
 	//log.Printf("request:%s country:%s province:%s period:%d", r.URL, country, province, period)
 
-	jsonURL := fmt.Sprintf("%s.json?period=%d", r.URL.Path, period)
+	// Compare growth rate of top ten series
+	comparisons := covid.TopTenSeries(series.Country)
 
 	// Set up context with data
 	context := map[string]interface{}{
+		"scale":            scale,
+		"startDeaths":      2, // Deaths to start comparison chart from
 		"period":           strconv.Itoa(period),
 		"country":          series.Key(series.Country),
 		"province":         series.Key(series.Province),
+		"comparisons":      comparisons,
 		"series":           series,
 		"allTimeDeaths":    allTimeDeaths,
 		"allTimeConfirmed": allTimeConfirmed,
 		"periodOptions":    covid.PeriodOptions(),
 		"countryOptions":   covid.CountryOptions(),
 		"provinceOptions":  covid.ProvinceOptions(series.Country),
-		"jsonURL":          jsonURL,
+		"jsonURL":          fmt.Sprintf("%s.json?period=%d", r.URL.Path, period),
 	}
 
 	// If in development reload templates each time - no mutex as in dev only
@@ -163,6 +172,16 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 	}
 
+}
+
+// param returns one param string value
+func param(r *http.Request, key string) string {
+	queryParams := r.URL.Query()
+	if len(queryParams[key]) > 0 {
+		return queryParams[key][0]
+	}
+
+	return ""
 }
 
 // parseParams parses the parts of the url path (if any) and params

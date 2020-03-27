@@ -80,6 +80,9 @@
         position: relative;
         height:36vh;
     }
+    .chart_container.larger {
+        height:100vh; 
+    }
    
     footer {
         display:block;
@@ -155,11 +158,10 @@
     }
   
 </style>
-
 </head>
 
 <body>
-
+   
     <header>
     <h1><span id="chart_title">{{.series.Title}}</span> Coronavirus</h1>
     <h2><span class="deaths">{{.allTimeDeaths}} Deaths</span> &nbsp; <span class="confirmed">{{.allTimeConfirmed}} Confirmed</span></h2>
@@ -190,9 +192,8 @@
         </select>
     </form>
 
-
-    <h3 class="deaths">{{.series.Format .series.DeathsToday }} Deaths in {{.series.LastHours}} hours</h3>
-    <h4>{{.series.Format .series.AverageDeaths}} 5 day average</h4>
+    <h3 class="deaths">{{.series.Format .series.DeathsToday }} Deaths reported in last {{.series.LastHours}} hours</h3>
+    <h4>{{.series.Format .series.AverageDeaths}} Deaths 5 day average</h4>
     <div class="chart_container">
         <canvas class="chart" id="chartDailyDeaths" ></canvas>
     </div>
@@ -203,8 +204,8 @@
         <canvas class="chart" id="chartDeaths" ></canvas>
     </div>
 
-    <h3 class="confirmed">{{.series.Format .series.ConfirmedToday }} Confirmed in {{.series.LastHours}} hours</h3>
-    <h4>{{.series.Format .series.AverageConfirmed}} 5 day average</h4>
+    <h3 class="confirmed">{{.series.Format .series.ConfirmedToday }} Confirmed in last {{.series.LastHours}} hours</h3>
+    <h4>{{.series.Format .series.AverageConfirmed}} Cases 5 day average</h4>
     <div class="chart_container">
         <canvas class="chart" id="chartDailyConfirmed" ></canvas>
     </div>
@@ -214,6 +215,13 @@
         <canvas class="chart" id="chartConfirmed" ></canvas>
     </div>
 
+    {{ if gt (len .comparisons) 0 }}
+        <h3 class="confirmed">Growth Comparison</h3>
+        <h4>Growth in deaths from day of death {{.startDeaths}}</h4>
+        <div class="chart_container larger">
+            <canvas class="chart" id="chartComparisonDeaths" ></canvas>
+        </div>
+    {{ end }}
 
     {{ if not .series.UpdatedAt.IsZero }}
         <p class="updated_at">{{ .series.UpdatedAtDisplay}}</p>
@@ -272,7 +280,7 @@ var chartOptions = {
             }
          }],
          yAxes: [{
-          
+           type: '{{.scale}}',
            position: "right",
            ticks: {
                 fontSize:fontSize*5,
@@ -297,6 +305,51 @@ var chartOptions = {
     maintainAspectRatio:false
 }
 
+
+var chartComparisonOptions = {
+    title: {
+            display: false,
+     },
+    legend: {
+        position:'right',
+        pointStyle: 'dot',
+        usePointStyle: true,
+    },
+    scales: {
+         xAxes: [{
+            ticks: {
+                padding:10,
+                fontSize:fontSize*5
+            },
+            gridLines: {
+                zeroLineWidth:0,
+                color:"rgba(255, 255, 255,0)",
+                lineWidth: 0
+            }
+         }],
+         yAxes: [{
+           type: '{{.scale}}',
+           position: "right",
+           ticks: {
+                max:10000,
+                autoSkip: true,
+                maxTicksLimit: 5,
+                fontSize:fontSize*5,
+                callback: function(value, index, values) {
+                    if (value >= 1000) {
+                        return value / 1000 + 'k';
+                    }
+                    return value;
+                }
+            },
+            gridLines: {
+                color:"rgba(230, 230, 230,0.5)",
+                lineWidth: 1
+            }
+         }]
+    },
+    maintainAspectRatio:false
+}
 
 var chartDailyDeathsData = {
       "labels":{{.series.Dates}},
@@ -380,7 +433,37 @@ var chartConfirmed = new Chart(chartConfirmedCtx, {
     data: chartConfirmedData
 });
 
+{{ if gt (len .comparisons) 0 }}
+var chartComparisonDeathsData = {
+      "labels":{{ (index .comparisons 0).DaysFrom .startDeaths }},
+      "datasets":[
+      {{ range $i,$s := .comparisons}}{{if not (eq $i 0) }},{{end}}{
+            {{if eq .Province ""}}
+                label:"{{.Country}} Deaths",
+            {{ else }}
+                label:"{{.Province}}, {{.Country}} Deaths",
+             {{ end }}
+            data:{{ .DeathsFrom $.startDeaths }},
+            fill:false,
+            pointRadius: 3,
+			pointHoverRadius: 7,
+            borderWidth:"1",
+            color:"rgba({{.ColorValues $i}})",
+            borderColor:"rgba({{.ColorValues $i}})",
+            backgroundColor:"rgba({{.ColorValues $i}})",
+            lineTension:0.1
+            }
+       {{ end }}]
+}
 
+var chartComparisonDeathsCtx = document.getElementById('chartComparisonDeaths').getContext('2d');
+
+var chartComparisonDeaths = new Chart(chartComparisonDeathsCtx, {
+    type: 'line',
+    options: chartComparisonOptions,
+    data: chartComparisonDeathsData
+});
+{{ end }}
 
 var filters = document.getElementsByClassName("filter-select")
 for (i = 0; i < filters.length; i++) {
