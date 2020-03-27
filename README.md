@@ -5,7 +5,7 @@ Website: <a href="https://coronavirus.projectpage.app">https://coronavirus.proje
 
 This project uses data from to product charts of deaths, confirmed cases and recovered cases from countries globally, based on data provided by <a href="https://systems.jhu.edu/research/public-health/ncov/">John Hopkins University</a>. The source data is available <a href="https://github.com/CSSEGISandData/COVID-19">here</a> on github and is updated hourly from that source.  
 
-![Covid-19](docs/images/global.jpg)
+![Covid-19](docs/images/global.png)
 
 # View the data
 
@@ -19,7 +19,7 @@ Data is held in memory on the server so response times should be fast even under
 # Growth Comparison Chart
 At the bottom of the first page is a chart comparing global rates of death, inspired by work by John Burn-Murdoch at the [Financial Times](https://www.ft.com/coronavirus-latest).
 
-![Covid-19](docs/images/growth.jpg)
+![Covid-19](docs/images/growth.png)
 
 # Notes on Data
 There are some inconsistencies in the source data, which where possible have been corrected. All changes made to the data are outlined below. 
