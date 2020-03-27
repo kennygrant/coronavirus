@@ -139,6 +139,9 @@ func processData(data SeriesSlice) SeriesSlice {
 		if s.Country == "East Timor" {
 			s.Country = "Timor-Leste"
 		}
+		if s.Country == "Taiwan*" {
+			s.Country = "Taiwan"
+		}
 
 	}
 
@@ -151,14 +154,7 @@ func processData(data SeriesSlice) SeriesSlice {
 		Province: "",
 		StartsAt: startDate,
 	}
-	/*
-		// Build a US series
-		US := &Series{
-			Country:  "US",
-			Province: "",
-			StartsAt: startDate,
-		}
-	*/
+
 	// Build an Australia series
 	Australia := &Series{
 		Country:  "Australia",
@@ -189,15 +185,7 @@ func processData(data SeriesSlice) SeriesSlice {
 			China.Merge(s)
 		}
 
-		// The dataset now includes a US global entry
-		// Build an overall US series
-		// NB this ignores the US sub-state level data which we exclude from the dataset as it is no longer accurate
-		// for newer dates this data is zeroed anyway
-		/*
-			if s.Country == "US" {
-				US.Merge(s)
-			}
-		*/
+		// The dataset now includes a US global entry, but some other countries are missing
 
 		// Build an overall Australia series
 		if s.Country == "Australia" {
@@ -206,6 +194,9 @@ func processData(data SeriesSlice) SeriesSlice {
 
 		// Build an overall Canada series
 		if s.Country == "Canada" {
+			if s.Province == "Recovered" {
+				continue // ignore bogus province in canada
+			}
 			Canada.Merge(s)
 		}
 

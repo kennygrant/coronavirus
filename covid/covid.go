@@ -738,8 +738,10 @@ func (slice SeriesSlice) mergeDailyCountryCSV(records [][]string, dataType int) 
 			country := row[0]
 			province := ""
 
-			// There are several province series with bad names or dates which are duplicated in the state level dataset
-			// we therefore ignore them here as the data seems to be out of date anyway
+			// Fix data
+			if country == "Taiwan*" {
+				country = "Taiwan"
+			}
 
 			// Fetch the series
 			series, err := slice.FetchSeries(country, province)
