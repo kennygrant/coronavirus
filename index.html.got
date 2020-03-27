@@ -218,7 +218,7 @@
 
     <a name="confirmed"></a>
     <h3 class="confirmed">{{.series.Format .series.TotalConfirmed}} Confirmed</h3>
-    <h4>in {{.series.Count}} days, 2x in {{.series.DoubleDeathDays}} days</h4>
+    <h4>in {{.series.Count}} days, 2x in {{.series.DoubleConfirmedDays}} days</h4>
     <div class="chart_container">
         <canvas class="chart" id="chartConfirmed" ></canvas>
     </div>

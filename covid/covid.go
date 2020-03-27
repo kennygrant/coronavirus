@@ -115,30 +115,31 @@ func (s *Series) AverageConfirmed() int {
 	return sum / len(confirmed)
 }
 
-// DoubleDeathDays returns the number of days it took to double deaths
-// ignoring incomplete figures for today
+// DoubleDeathDays returns the number of days it took to more than double deaths
+// this ignores today's incomplete data
 func (s *Series) DoubleDeathDays() (days int) {
 	i := s.Count() - 1
 	half := s.Deaths[i] / 2
 	for i--; i >= 0; i-- {
-		days++
 		if s.Deaths[i] < half {
 			break
 		}
+		days++
 	}
 	// Return the number of days required to halve count
 	return days
 }
 
 // DoubleConfirmedDays returns the number of days it took to double cases
+// this ignores today's incomplete data
 func (s *Series) DoubleConfirmedDays() (days int) {
 	i := s.Count() - 1
 	half := s.Confirmed[i] / 2
 	for i--; i >= 0; i-- {
-		days++
 		if s.Confirmed[i] < half {
 			break
 		}
+		days++
 	}
 	// Return the number of days required to at least halve count
 	return days
