@@ -311,7 +311,7 @@ var chartComparisonOptions = {
             display: false,
      },
     legend: {
-        position:'right',
+        position:{{ if .mobile}}'bottom'{{else}}'right'{{end}},
         pointStyle: 'dot',
         usePointStyle: true,
     },

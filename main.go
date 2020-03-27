@@ -107,13 +107,15 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	allTimeDeaths := series.Format(series.TotalDeaths())
 	allTimeConfirmed := series.Format(series.TotalConfirmed())
 
+	mobile := strings.Contains(strings.ToLower(r.UserAgent()), "mobile")
+
 	// Use a default period depending on device if none selected
 	if period == 0 {
 		// Default to last 56 days
 		period = 56
 
 		// Default to 28 days later for phones
-		if strings.Contains(strings.ToLower(r.UserAgent()), "mobile") {
+		if mobile {
 			period = 28
 		}
 	}
@@ -135,8 +137,6 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 
 	// Set up context with data
 	context := map[string]interface{}{
-		"scale":            scale,
-		"startDeaths":      2, // Deaths to start comparison chart from
 		"period":           strconv.Itoa(period),
 		"country":          series.Key(series.Country),
 		"province":         series.Key(series.Province),
@@ -148,6 +148,9 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		"countryOptions":   covid.CountryOptions(),
 		"provinceOptions":  covid.ProvinceOptions(series.Country),
 		"jsonURL":          fmt.Sprintf("%s.json?period=%d", r.URL.Path, period),
+		"scale":            scale,
+		"mobile":           mobile,
+		"startDeaths":      2, // Deaths to start comparison chart from
 	}
 
 	// If in development reload templates each time - no mutex as in dev only
