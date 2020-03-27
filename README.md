@@ -5,7 +5,7 @@ Website: <a href="https://coronavirus.projectpage.app">https://coronavirus.proje
 
 This project uses data from to product charts of deaths, confirmed cases and recovered cases from countries globally, based on data provided by <a href="https://systems.jhu.edu/research/public-health/ncov/">John Hopkins University</a>. The source data is available <a href="https://github.com/CSSEGISandData/COVID-19">here</a> on github and is updated hourly from that source.  
 
-![Covid-19](https://raw.githubusercontent.com/kennygrant/coronavirus/master/README.jpg)
+![Covid-19](docs/images/global.jpg)
 
 # View the data
 
@@ -15,24 +15,36 @@ You can also access a json feed for any of the series at urls like this: https:/
 
 Data is held in memory on the server so response times should be fast even under load. This project and all code and data transformations are public domain and free in every sense, corrections and contributions are welcome. 
 
+
+# Growth Comparison Chart
+At the bottom of the first page is a chart comparing global rates of death, inspired by work by John Burn-Murdoch at the [Financial Times](https://www.ft.com/coronavirus-latest).
+
+![Covid-19](docs/images/growth.jpg)
+
 # Notes on Data
 There are some inconsistencies in the source data, which where possible have been corrected. All changes made to the data are outlined below. 
 
 The main datasource changed significantly on 24th March, just after launching this page, and unfortunately no longer provides a breakdown of US states in the time series data, only the daily data. I'm investigating ways to address that, but for now there is only one entry for the US.
 
-## 24th March
+## 2020-03-27
+
+* Investigating maintaining separate data files so that US states can be restored, and data can be updated by multiple people easily
+
+
+## 2020-03-24
 
 * Removed US overall data - a sum of all other series with country US
 * Data source no longer provides recovered cases, so it was removed 
 * Data source no longer provides US states, so it has been removed - investigating other options 
 * UK does not have a full area breakdown at present
 
-## 22nd March - initial version
+## 2020-03-22
 
 * Added Global time series which is a sum of all other series 
 * Added China overall data - a sum of all other series with country China
 * Added Austrilia overall data - a sum of all other series with country Austrilia
 * Added Canada overall data - a sum of all other series with country Canada
+
 
 
 # Installation 
