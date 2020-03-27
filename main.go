@@ -104,8 +104,8 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the total counts first for the page
-	allTimeDeaths := series.Format(series.TotalDeaths())
-	allTimeConfirmed := series.Format(series.TotalConfirmed())
+	allTimeDeaths := series.TotalDeaths()
+	allTimeConfirmed := series.TotalConfirmed()
 
 	mobile := strings.Contains(strings.ToLower(r.UserAgent()), "mobile")
 

@@ -3,7 +3,7 @@
     "country"   : "{{e .series.Country}}",
     "province"  : "{{e .series.Province}}",
     "alltimeDeaths": {{ .allTimeDeaths }},
-    "alltimeDeaths": {{ .allTimeConfirmed }},
+    "allTimeConfirmed": {{ .allTimeConfirmed }},
     "dates"     : {{ls .series.Dates}},
     "deaths"    : {{l .series.Deaths}},
     "confirmed" : {{l .series.Confirmed}}

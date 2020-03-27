@@ -164,7 +164,7 @@
     <a name="top"></a>
     <header>
     <h1><span id="chart_title">{{.series.Title}}</span> Coronavirus</h1>
-    <h2><span class="deaths">{{.allTimeDeaths}} Deaths</span> &nbsp; <span class="confirmed">{{.allTimeConfirmed}} Confirmed</span></h2>
+    <h2><span class="deaths">{{.series.Format .allTimeDeaths}} Deaths</span> &nbsp; <span class="confirmed">{{.series.Format .allTimeConfirmed}} Confirmed</span></h2>
     </header>
     
     <article>
