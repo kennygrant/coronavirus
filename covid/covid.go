@@ -447,13 +447,15 @@ func (s *Series) UpdateDaily() {
 func (s *Series) AddDayData(dayIndex int, updated time.Time, confirmed, deaths int) {
 	s.UpdatedAt = updated
 
-	if dayIndex > len(s.Deaths)-1 {
-		//	fmt.Printf("dayIndex:%d %d\n", dayIndex, len(s.Deaths))
+	if dayIndex > len(s.Deaths) {
 		s.Deaths = append(s.Deaths, deaths)
+	} else {
+		s.Deaths[dayIndex] = deaths
+	}
+
+	if dayIndex > len(s.Confirmed) {
 		s.Confirmed = append(s.Confirmed, confirmed)
 	} else {
-		//	fmt.Printf("dayIndex exists:%d %d\n", dayIndex, len(s.Deaths))
-		s.Deaths[dayIndex] = deaths
 		s.Confirmed[dayIndex] = confirmed
 	}
 
@@ -812,7 +814,7 @@ func (slice SeriesSlice) mergeTimeSeriesCSV(records [][]string, dataType int) (S
 // mergeDailyCountryCSV merges the data in this country daily series CSV with the data we already have in the SeriesSlice
 func (slice SeriesSlice) mergeDailyCountryCSV(records [][]string, dataType int) (SeriesSlice, error) {
 
-	log.Printf("load: merge daily country csv")
+	//	log.Printf("load: merge daily country csv")
 
 	// Make an assumption about the starting date - if this changes update
 	startDate := time.Date(2020, 1, 22, 0, 0, 0, 0, time.UTC)
@@ -849,8 +851,9 @@ func (slice SeriesSlice) mergeDailyCountryCSV(records [][]string, dataType int) 
 			// Fetch the series
 			series, err := slice.FetchSeries(country, province)
 			if err != nil {
-				log.Printf("load: warning reading daily series:%s error:%s", row[0], err)
+				//	log.Printf("load: warning reading daily series:%s error:%s", row[0], err)
 				//return nil, fmt.Errorf("load: error reading daily series:%s error:%s", row[0], err)
+				continue
 			}
 
 			// Get the series data from the row
@@ -904,7 +907,7 @@ func readCountryRow(row []string) (time.Time, int, int, error) {
 // mergeDailyStateCSV merges the data in this state daily series CSV with the data we already have in the SeriesSlice
 func (slice SeriesSlice) mergeDailyStateCSV(records [][]string, dataType int) (SeriesSlice, error) {
 
-	log.Printf("load: merge daily state csv")
+	//	log.Printf("load: merge daily state csv")
 
 	// Make an assumption about the starting date - if this changes update
 	startDate := time.Date(2020, 1, 22, 0, 0, 0, 0, time.UTC)
@@ -943,8 +946,9 @@ func (slice SeriesSlice) mergeDailyStateCSV(records [][]string, dataType int) (S
 			// Fetch the series
 			series, err := slice.FetchSeries(country, province)
 			if err != nil {
-				log.Printf("load: warning reading daily state series:%s error:%s", row[1], err)
+				//	log.Printf("load: warning reading daily state series:%s error:%s", row[1], err)
 				//return nil, fmt.Errorf("load: error reading daily series:%s error:%s", row[0], err)
+				continue
 			}
 
 			// Get the series data from the row
