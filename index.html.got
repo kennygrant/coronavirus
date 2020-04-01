@@ -241,6 +241,25 @@
         </div>
     {{ end }}
 
+
+     {{ if gt (len .comparisons) 0 }}
+        <a name="growth"></a>
+        <h3 class="confirmed">New Deaths
+        {{ if eq .scale "linear" }}
+        <a href="{{.scaleURL}}" class="button">Linear</a> 
+        {{ else }}
+        <a href="{{.scaleURL}}" class="button">Log</a> 
+        {{ end }}
+        </h3>
+        <h4>New deaths from day of death {{.startDeaths}}
+        </h4>
+
+        <div class="chart_container larger">
+            <canvas class="chart" id="chartComparisonDeaths" ></canvas>
+        </div>
+    {{ end }}
+
+
     {{ if not .series.UpdatedAt.IsZero }}
         <p class="updated_at">{{ .series.UpdatedAtDisplay}}</p>
     {{ end }}

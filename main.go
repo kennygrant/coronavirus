@@ -94,7 +94,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	log.Printf("request:%s", r.URL)
 
 	// Get the parameters from the url
-	country, province, period := parseParams(r)
+	country, province, period, startDeaths := parseParams(r)
 
 	// Fetch the series concerned - if both are blank we'll get the global series
 	series, err := covid.FetchSeries(country, province)
@@ -108,6 +108,10 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	allTimeConfirmed := series.TotalConfirmed()
 
 	mobile := strings.Contains(strings.ToLower(r.UserAgent()), "mobile")
+
+	if startDeaths == 0 {
+		startDeaths = 5
+	}
 
 	// Use a default period depending on device if none selected
 	if period == 0 {
@@ -161,7 +165,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		"scale":            scale,
 		"scaleURL":         scaleURL,
 		"mobile":           mobile,
-		"startDeaths":      5, // Deaths to start comparison chart from
+		"startDeaths":      startDeaths, // Deaths to start comparison chart from
 	}
 
 	// If in development reload templates each time - no mutex as in dev only
@@ -199,7 +203,9 @@ func param(r *http.Request, key string) string {
 }
 
 // parseParams parses the parts of the url path (if any) and params
-func parseParams(r *http.Request) (country, province string, period int) {
+func parseParams(r *http.Request) (country, province string, period, startDeaths int) {
+
+	var err error
 
 	// Parse the path
 	p := r.URL.Path
@@ -219,14 +225,25 @@ func parseParams(r *http.Request) (country, province string, period int) {
 
 	// Add query string params from request  - accept all params this way
 	queryParams := r.URL.Query()
+
+	// Read period if any
 	if len(queryParams["period"]) > 0 {
-		var err error
-		periodString := queryParams["period"][0]
-		period, err = strconv.Atoi(periodString)
+		paramString := queryParams["period"][0]
+		period, err = strconv.Atoi(paramString)
 		if err != nil {
 			period = 0
 		}
 	}
+
+	// Read start deaths (to start charts at death n)
+	if len(queryParams["start_deaths"]) > 0 {
+		paramString := queryParams["start_deaths"][0]
+		startDeaths, err = strconv.Atoi(paramString)
+		if err != nil {
+			startDeaths = 0
+		}
+	}
+
 	if len(queryParams["country"]) > 0 {
 		country = queryParams["country"][0]
 	}
@@ -245,7 +262,7 @@ func parseParams(r *http.Request) (country, province string, period int) {
 		country = ""
 	}
 
-	return country, province, period
+	return country, province, period, startDeaths
 }
 
 // handleFile shows a file (if it exists)
