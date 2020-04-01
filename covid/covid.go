@@ -530,7 +530,12 @@ func SelectedEuropeanSeries(country string, n int) SeriesSlice {
 			continue
 		}
 
-		// Always include country
+		// Exclude provinces
+		if s.IsProvince() {
+			continue
+		}
+
+		// Always include the country
 		if s.Country == country {
 			collection = append(collection, s)
 			count++
@@ -563,7 +568,7 @@ func SelectedSeries(country string, n int) SeriesSlice {
 			continue
 		}
 
-		// Exclude provinces
+		// Exclude provinces for now
 		if s.IsProvince() {
 			continue
 		}
@@ -598,6 +603,11 @@ func TopSeries(country string, n int) SeriesSlice {
 
 		// Exclude global series
 		if s.Global() {
+			continue
+		}
+
+		// Exclude provinces
+		if s.IsProvince() {
 			continue
 		}
 
