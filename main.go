@@ -126,8 +126,10 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	}
 
 	scale := "linear"
+	scaleURL := r.URL.Path + "?scale=log#growth"
 	if param(r, "scale") == "log" {
 		scale = "logarithmic"
+		scaleURL = r.URL.Path + "#growth"
 	}
 
 	// For global compare growth rate of top 20 series
@@ -157,6 +159,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		"provinceOptions":  covid.ProvinceOptions(series.Country),
 		"jsonURL":          fmt.Sprintf("%s.json?period=%d", r.URL.Path, period),
 		"scale":            scale,
+		"scaleURL":         scaleURL,
 		"mobile":           mobile,
 		"startDeaths":      5, // Deaths to start comparison chart from
 	}
