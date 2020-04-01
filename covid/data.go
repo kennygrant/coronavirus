@@ -263,8 +263,8 @@ func ScheduleDataFetch() {
 	// Set up a scheduled time every day at 8PM UTC
 	now := time.Now()
 	when := time.Date(now.Year(), now.Month(), now.Day(), 3, 33, 0, 0, time.UTC)
-	daily := time.Hour * 24 // daily
-	hourly := time.Hour     // hourly
+	daily := time.Hour * 24       // daily
+	regularly := 15 * time.Minute // every 15 minutes
 
 	// For debug, test straight away
 	//when = now.Add(5 * time.Second)
@@ -272,10 +272,10 @@ func ScheduleDataFetch() {
 	// Schedule the fetch for daily data
 	ScheduleAt(FetchDataDaily, when, daily)
 
-	// Schedule an hourly fetch for hourly data
-	when = time.Date(now.Year(), now.Month(), now.Day(), 0, 5, 0, 0, time.UTC)
+	// Schedule a regular fetch for today's data
+	when = time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, time.UTC)
 
-	ScheduleAt(FetchDataHourly, when, hourly)
+	ScheduleAt(FetchTodaysData, when, regularly)
 
 }
 
@@ -299,9 +299,9 @@ func FetchDataDaily() {
 	}
 }
 
-// FetchDataHourly is called on a schedule
-func FetchDataHourly() {
-	log.Printf("schedule: fetching hourly data from data source")
+// FetchTodaysData is called on a schedule
+func FetchTodaysData() {
+	log.Printf("schedule: fetching todays data from data source")
 
 	// First download hourly data files
 	err := DownloadFiles(hourlyDataFiles, dataPath)
