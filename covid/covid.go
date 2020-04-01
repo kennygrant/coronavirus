@@ -87,8 +87,8 @@ func (s *Series) Count() int {
 
 // AverageDeaths returns the average deaths per day over the last 3 days
 func (s *Series) AverageDeaths() int {
-	// Use last 5 days (including today, which may be incomplete)
-	i := len(s.DeathsDaily) - 5
+	// Use last 3 days (including today, which may be incomplete)
+	i := len(s.DeathsDaily) - 3
 	if i < 0 {
 		i = 0
 	}
@@ -102,8 +102,8 @@ func (s *Series) AverageDeaths() int {
 
 // AverageConfirmed returns the average deaths per day over the last 3 days
 func (s *Series) AverageConfirmed() int {
-	// Use last 5 days (including today, which may be incomplete)
-	i := len(s.ConfirmedDaily) - 5
+	// Use last 53days (including today, which may be incomplete)
+	i := len(s.ConfirmedDaily) - 3
 	if i < 0 {
 		i = 0
 	}
