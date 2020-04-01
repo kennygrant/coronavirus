@@ -539,7 +539,7 @@ func SelectedEuropeanSeries(country string, n int) SeriesSlice {
 		if s.Country == country {
 			collection = append(collection, s)
 			count++
-		} else if s.Country == "Italy" || s.Country == "Spain" || s.Country == "France" || s.Country == "Switzerland" || s.Country == "Germany" {
+		} else if s.Country == "Italy" || s.Country == "Spain" || s.Country == "France" || s.Country == "Switzerland" || s.Country == "Germany" || s.Country == "United Kingdom" {
 			collection = append(collection, s)
 			count++
 		}
