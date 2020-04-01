@@ -130,8 +130,16 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		scale = "logarithmic"
 	}
 
-	// Compare growth rate of top 20 series
-	comparisons := covid.TopSeries(series.Country, 20)
+	// For global compare growth rate of top 20 series
+	var comparisons covid.SeriesSlice
+	if series.Global() {
+		comparisons = covid.TopSeries(series.Country, 20)
+	} else if series.European() {
+		comparisons = covid.SelectedEuropeanSeries(country, 10)
+	} else {
+		// Else fetch a selection of copmarative series (for example nearby countries)
+		comparisons = covid.SelectedSeries(series.Country, 10)
+	}
 
 	log.Printf("comparisons:%d", len(comparisons))
 
@@ -150,7 +158,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		"jsonURL":          fmt.Sprintf("%s.json?period=%d", r.URL.Path, period),
 		"scale":            scale,
 		"mobile":           mobile,
-		"startDeaths":      2, // Deaths to start comparison chart from
+		"startDeaths":      5, // Deaths to start comparison chart from
 	}
 
 	// If in development reload templates each time - no mutex as in dev only

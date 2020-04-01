@@ -256,6 +256,19 @@ func (s *Series) MergeFinalDay(series *Series) error {
 	return nil
 }
 
+// European returns true if this is a European country in the top 20
+func (s *Series) European() bool {
+	if s.Province != "" {
+		return false
+	}
+	return s.Country == "United Kingdom" || s.Country == "France" || s.Country == "Italy" || s.Country == "Belgium" || s.Country == "Spain" || s.Country == "Germany" || s.Country == "Netherlands" || s.Country == "Switzerland" || s.Country == "Sweden" || s.Country == "Portugal"
+}
+
+// IsProvince returns true if this is a province not a country
+func (s *Series) IsProvince() bool {
+	return s.Province != ""
+}
+
 // Global returns true if this is the global series
 func (s *Series) Global() bool {
 	return s.Country == "" && s.Province == ""
@@ -490,15 +503,13 @@ func (slice SeriesSlice) PrintSeries(country string, province string) error {
 	return nil
 }
 
-// TopSeries selects the top n series by deaths
-func TopSeries(country string, n int) SeriesSlice {
+// SelectedEuropeanSeries selects a set of comparative series of interest from Europe
+func SelectedEuropeanSeries(country string, n int) SeriesSlice {
 	mutex.RLock()
 	defer mutex.RUnlock()
 
-	// Since we exclude global, we want a count of
+	// Fetch all top series
 	var count int
-
-	// Need to get those matching country
 	var collection SeriesSlice
 	for _, s := range data {
 		if count >= n {
@@ -510,15 +521,87 @@ func TopSeries(country string, n int) SeriesSlice {
 			continue
 		}
 
-		if country == "" && s.Province == "" {
-			// Append all *countries* if country is blank
+		// Always include country
+		if s.Country == country {
 			collection = append(collection, s)
 			count++
-		} else if s.Country == country && s.Province != "" {
-			// Else in a country so append any provinces for that country
+		} else if s.Country == "Italy" || s.Country == "Spain" || s.Country == "France" || s.Country == "Switzerland" || s.Country == "Germany" {
 			collection = append(collection, s)
 			count++
 		}
+
+	}
+
+	return collection
+
+}
+
+// SelectedSeries selects a set of comparative series of interest
+func SelectedSeries(country string, n int) SeriesSlice {
+	mutex.RLock()
+	defer mutex.RUnlock()
+
+	// Fetch all top series
+	var count int
+	var collection SeriesSlice
+	for _, s := range data {
+		if count >= n {
+			break
+		}
+
+		// Exclude global series
+		if s.Global() {
+			continue
+		}
+
+		// Exclude provinces
+		if s.IsProvince() {
+			continue
+		}
+
+		// Always include country
+		if s.Country == country {
+			collection = append(collection, s)
+			count++
+		} else if country == "Spain" || country == "US" || country == "United Kingdom" || country == "China" || country == "Japan" {
+			collection = append(collection, s)
+			count++
+		}
+
+	}
+
+	return collection
+
+}
+
+// TopSeries selects the top n series by deaths
+func TopSeries(country string, n int) SeriesSlice {
+	mutex.RLock()
+	defer mutex.RUnlock()
+
+	// Fetch all top series
+	var count int
+	var collection SeriesSlice
+	for _, s := range data {
+		if count >= n {
+			break
+		}
+
+		// Exclude global series
+		if s.Global() {
+			continue
+		}
+
+		// Append all *countries* if global series is given
+		if country == "" && !s.IsProvince() {
+			collection = append(collection, s)
+			count++
+		} else if s.MatchCountry(country) && s.IsProvince() {
+			// Append any provinces for this country if a country series is given
+			collection = append(collection, s)
+			count++
+		}
+
 	}
 
 	return collection
