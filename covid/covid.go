@@ -388,14 +388,12 @@ func (s *Series) Description() string {
 	}
 }
 
-// DaysFrom returns day counts from DeathsFrom numbers
-func (s *Series) DaysFrom(n int) []string {
-	// Get DeathsFrom
-	deaths := s.DeathsFrom(n)
+// DaysFrom returns day counts from a series of numbers
+func (s *Series) DaysFrom(values []int) []string {
 
-	// Build a set of labels for these deaths counting from day 1
+	// Build a set of labels for these values counting from day 1
 	var days []string
-	for i := range deaths {
+	for i := range values {
 		days = append(days, fmt.Sprintf("Day %d", i+1))
 	}
 	return days
@@ -407,6 +405,17 @@ func (s *Series) DeathsFrom(n int) []int {
 	for i, d := range s.Deaths {
 		if d >= n {
 			return s.Deaths[i : len(s.Deaths)-1]
+		}
+	}
+	return nil
+}
+
+// NewDeathsFrom returns series of deaths per day after death number n
+func (s *Series) NewDeathsFrom(n int) []int {
+	// Walk through deaths looking for death n, then return series from that day
+	for i, d := range s.DeathsDaily {
+		if d >= n {
+			return s.DeathsDaily[i : len(s.DeathsDaily)-1]
 		}
 	}
 	return nil

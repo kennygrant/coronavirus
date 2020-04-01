@@ -242,20 +242,15 @@
     {{ end }}
 
 
-     {{ if gt (len .comparisons) 0 }}
+     {{ if and false (gt (len .comparisons) 0) }}
         <a name="growth"></a>
         <h3 class="confirmed">New Deaths
-        {{ if eq .scale "linear" }}
-        <a href="{{.scaleURL}}" class="button">Linear</a> 
-        {{ else }}
-        <a href="{{.scaleURL}}" class="button">Log</a> 
-        {{ end }}
         </h3>
         <h4>New deaths from day of death {{.startDeaths}}
         </h4>
 
         <div class="chart_container larger">
-            <canvas class="chart" id="chartComparisonDeaths" ></canvas>
+            <canvas class="chart" id="chartComparisonNewDeaths" ></canvas>
         </div>
     {{ end }}
 
@@ -511,8 +506,11 @@ var colorValues = [
 	[109, 57, 165]
 ];
 
+
+{{ $firstSeries := (index .comparisons 0) }}
+
 var chartComparisonDeathsData = {
-      labels:{{ (index .comparisons 0).DaysFrom .startDeaths }},
+      labels:{{ $firstSeries.DaysFrom ($firstSeries.DeathsFrom .startDeaths) }},
       datasets:[
       {{ range $i,$s := .comparisons}}{{if not (eq $i 0) }},{{end}}{
             fill: false,
@@ -536,6 +534,35 @@ var chartComparisonDeaths = new Chart(chartComparisonDeathsCtx, {
     options: chartComparisonOptions,
     data: chartComparisonDeathsData
 });
+
+/*
+var chartComparisonNewDeathsData = {
+      labels:{{ $firstSeries.DaysFrom ($firstSeries.NewDeathsFrom .startDeaths) }},
+      datasets:[
+      {{ range $i,$s := .comparisons}}{{if not (eq $i 0) }},{{end}}{
+            fill: false,
+            lineTension:0.1,
+            pointRadius: 3,
+			pointHoverRadius: 7,
+            borderWidth: 1,
+            color:"rgb("+colorValues[{{$i}}]+")",
+            borderColor:"rgb("+colorValues[{{$i}}]+")",
+            backgroundColor:"rgb("+colorValues[{{$i}}]+")",
+            label: {{ .Description }},
+            data: {{ .NewDeathsFrom $.startDeaths }}
+            }
+       {{ end }}]
+}
+
+var chartComparisonNewDeathsCtx = document.getElementById('chartComparisonNewDeaths').getContext('2d');
+
+var chartComparisonNewDeaths = new Chart(chartComparisonNewDeathsCtx, {
+    type: 'line',
+    options: chartComparisonOptions,
+    data: chartComparisonNewDeathsData
+});
+*/
+{{/* end comparisons */}}
 {{ end }}
 
 var filters = document.getElementsByClassName("filter-select")
