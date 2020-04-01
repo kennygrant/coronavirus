@@ -12,8 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kennygrant/coronavirus/covid"
 	"golang.org/x/crypto/acme/autocert"
+
+	"github.com/kennygrant/coronavirus/covid"
+	"github.com/kennygrant/coronavirus/series"
 )
 
 var development = false
@@ -29,10 +31,19 @@ func main() {
 		development = true
 	}
 
+	// Load alternative data in parallel
+	if os.Getenv("COVID") == "alt" {
+		development = true
+		err := series.LoadData("./data")
+		if err != nil {
+			log.Fatalf("server: failed to load new data:%s", err)
+		}
+	}
+
 	if development {
-		log.Printf("server: restarting in development mode")
+		log.Printf("server: starting in development mode")
 	} else {
-		log.Printf("server: restarting")
+		log.Printf("server: starting in production mode")
 	}
 
 	// Schedule a regular fetch of data at a specified time daily
@@ -43,6 +54,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("server: failed to load data:%s", err)
 	}
+
 	// Fetch all data again on first load in production
 	// don't do this in dev normally
 	if !development {
