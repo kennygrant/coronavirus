@@ -310,7 +310,7 @@ func (s *Series) Format(i int) string {
 		return fmt.Sprintf("%.1fk", float64(i)/1000)
 	}
 
-	return fmt.Sprintf("%.1fm", float64(i)/1000000)
+	return fmt.Sprintf("%.3gm", float64(i)/1000000)
 }
 
 // ConfirmedToday returns confirmed for last data in series
