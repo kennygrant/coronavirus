@@ -447,13 +447,13 @@ func (s *Series) UpdateDaily() {
 func (s *Series) AddDayData(dayIndex int, updated time.Time, confirmed, deaths int) {
 	s.UpdatedAt = updated
 
-	if dayIndex > len(s.Deaths) {
+	if dayIndex > len(s.Deaths)-1 {
 		s.Deaths = append(s.Deaths, deaths)
 	} else {
 		s.Deaths[dayIndex] = deaths
 	}
 
-	if dayIndex > len(s.Confirmed) {
+	if dayIndex > len(s.Confirmed)-1 {
 		s.Confirmed = append(s.Confirmed, confirmed)
 	} else {
 		s.Confirmed[dayIndex] = confirmed
