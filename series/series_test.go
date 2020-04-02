@@ -7,6 +7,31 @@ import (
 	"time"
 )
 
+var formatTests = map[int]string{
+	10:       "10",
+	999:      "999",
+	1000:     "1000",
+	1101:     "1101",
+	10101:    "10.1k",
+	11101:    "11.1k",
+	1000000:  "1m",
+	1100000:  "1.1m",
+	1100499:  "1.1m",
+	22400499: "22.4m",
+}
+
+func TestFormat(t *testing.T) {
+	d := &Data{}
+
+	for k, v := range formatTests {
+		r := d.Format(k)
+		if r != v {
+			t.Errorf("format: failed for:%d want:%s got:%s", k, v, r)
+		}
+	}
+
+}
+
 // TestLoadAreas tests loading our static test area file (with just a few areas in it)
 func TestLoadAreas(t *testing.T) {
 	p, _ := filepath.Abs("testdata/areas.csv")

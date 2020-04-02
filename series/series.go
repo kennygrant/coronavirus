@@ -83,6 +83,17 @@ type Data struct {
 	Days []*Day
 }
 
+// Format formats a given number for display and returns a string
+func (d *Data) Format(i int) string {
+	if i < 10000 {
+		return fmt.Sprintf("%d", i)
+	} else if i < 1000000 {
+		return fmt.Sprintf("%.1fk", float64(i)/1000)
+	}
+
+	return fmt.Sprintf("%.3gm", float64(i)/1000000)
+}
+
 // Global returns true if this is the global series
 func (d *Data) String() string {
 	if d.Global() {
