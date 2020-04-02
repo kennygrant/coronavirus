@@ -108,6 +108,15 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	// Get the parameters from the url
 	country, province, period, startDeaths := parseParams(r)
 
+	/*
+		// Fetch the series requested
+		seriesNew, err := series.FetchSeries(country, province)
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+	*/
+
 	// Fetch the series concerned - if both are blank we'll get the global series
 	series, err := covid.FetchSeries(country, province)
 	if err != nil {
@@ -163,11 +172,12 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 
 	// Set up context with data
 	context := map[string]interface{}{
-		"period":           strconv.Itoa(period),
-		"country":          series.Key(series.Country),
-		"province":         series.Key(series.Province),
-		"comparisons":      comparisons,
-		"series":           series,
+		"period":      strconv.Itoa(period),
+		"country":     series.Key(series.Country),
+		"province":    series.Key(series.Province),
+		"comparisons": comparisons,
+		"series":      series,
+		//"seriesNew":        seriesNew,
 		"allTimeDeaths":    allTimeDeaths,
 		"allTimeConfirmed": allTimeConfirmed,
 		"periodOptions":    covid.PeriodOptions(),
