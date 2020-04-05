@@ -16,14 +16,16 @@ func ScheduleUpdates() {
 	log.Printf("series: scheduling updates")
 
 	// As a test just try calling update first
-	//go updateJHU()
+	go updateFrequent()
 }
 
 // I think for manual updates just hit the reload endpont
 
-// Update data from JHU
+// updateFrequent updaes data frequently (every 30 minutes say)
 // Called in a goroutine
-func updateJHU() {
+// the dataset is somewhat inconsistent and therefore requires some massaging
+// for example not all countries have global data
+func updateFrequent() {
 
 	// Pull the repo first with git to be sure we're up to date
 	err := gitPull()
@@ -32,8 +34,8 @@ func updateJHU() {
 		return
 	}
 
-	// Download the file
-	filePath := "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/web-data/data/cases.csv"
+	// Download the country cases file into csv rows
+	filePath := "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/web-data/data/cases_country.csv"
 	rows, err := downloadCSV(filePath)
 	if err != nil {
 		log.Printf("server: failed to download JHU csv:%s", err)
@@ -42,23 +44,42 @@ func updateJHU() {
 
 	// This data has a specific format, ask the series to decode
 	// and update the changed series in memory
-	err = series.UpdateFromJHUCases(rows)
+	err = series.UpdateFromJHUCountryCases(rows)
 	if err != nil {
 		log.Printf("server: failed to update from JHU data :%s", err)
 		return
 	}
+
+	// Update from the cases_states file for US states data
+
+	// Download the US states cases file into csv rows
+	filePath = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/web-data/data/cases_state.csv"
+	rows, err = downloadCSV(filePath)
+	if err != nil {
+		log.Printf("server: failed to download JHU states csv:%s", err)
+		return
+	}
+
+	// This data has a specific format, ask the series to decode
+	// and update the changed series in memory
+	err = series.UpdateFromJHUStatesCases(rows)
+	if err != nil {
+		log.Printf("server: failed to update from JHU data :%s", err)
+		return
+	}
+
+	// Now update our global series which are unfortunteley not contained in this data
+	err = series.CalculateGlobalSeriesData()
+	if err != nil {
+		log.Printf("server: failed to calculate global series :%s", err)
+		return
+	}
+
 	/*
 		// Now save the series file to disk
 		err = series.Save("data/series.csv")
 		if err != nil {
 			log.Printf("server: failed to save series data:%s", err)
-			return
-		}
-
-		// Now reload the data
-		err = series.Load("data/series.csv")
-		if err != nil {
-			log.Printf("server: failed to load series data:%s", err)
 			return
 		}
 

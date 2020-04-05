@@ -124,6 +124,14 @@ func (d *Data) Title() string {
 	return fmt.Sprintf("%s (%s)", d.Province, d.Country)
 }
 
+// UpdatedAtDisplay retuns a string to display updated at date (if we have a date)
+func (d *Data) UpdatedAtDisplay() string {
+	if d.UpdatedAt.IsZero() {
+		return ""
+	}
+	return fmt.Sprintf("Data last updated at %s", d.UpdatedAt.Format("2006-01-02 15:04 MST"))
+}
+
 // SetUpdated updates UpdatedAt if it is before this new time
 func (d *Data) SetUpdated(updated time.Time) {
 	if d.UpdatedAt.Before(updated) {
@@ -575,6 +583,13 @@ func (d *Data) UpdateToday(updated time.Time, deaths, confirmed, recovered, test
 	}
 }
 
+// ResetDays clears all days stored for this time series
+func (d *Data) ResetDays() {
+	count := len(d.Days)
+	d.Days = []*Day{}
+	d.AddDays(count)
+}
+
 // FIXME - I think this won't be required
 
 // AddDay adds a day to this series
@@ -605,4 +620,31 @@ func (d *Data) AddDay(date time.Time, deaths, confirmed, recovered, tested int) 
 
 	d.Days = append(d.Days, day)
 	return nil
+}
+
+// ShouldIncludeInGlobal returns true if this series should be added to global
+func (d *Data) ShouldIncludeInGlobal() bool {
+	if d.IsGlobal() {
+		return false
+	}
+
+	// Exclude our extra series from global
+	if d.IsCountry() {
+		if d.Country == "China" || d.Country == "Australia" || d.Country == "Canada" {
+			return false
+		}
+	}
+
+	// Exclude US provinces from totals as we have a global entry
+	if d.IsProvince() && d.Country == "US" {
+		return false
+	}
+
+	// Exclude our extra UK provinces from gloval total as we have a UK entry from JHU
+	if d.Country == "United Kingdom" && (d.Province == "England" || d.Province == "Scotland" || d.Province == "Wales" || d.Province == "Northern Ireland") {
+		return false
+	}
+
+	// By default return true
+	return true
 }

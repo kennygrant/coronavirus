@@ -43,7 +43,7 @@ func main() {
 	}
 
 	// Schedule a regular data update/reload
-	//ScheduleUpdates()
+	ScheduleUpdates()
 
 	// Load our template files into memory
 	loadTemplates()
@@ -202,9 +202,7 @@ func handleReload(w http.ResponseWriter, r *http.Request) {
 		log.Printf("reload error:%s", err)
 		http.Error(w, err.Error(), 500)
 	} else {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(200)
-		w.Write([]byte("reloaded"))
+		http.Redirect(w, r, "/", 302)
 	}
 
 }

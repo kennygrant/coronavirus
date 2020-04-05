@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -64,7 +63,7 @@ func processData() error {
 	// Now we've loaded all our files we're in theory ready to write out the historical series file which the app will use.
 	// One thing we must do though is fill in global series not in the original dataset which is inconsistent in this regard
 	// Various global indices must be added	before writing out
-	err = calculateGlobalSeriesData()
+	err = series.CalculateGlobalSeriesData()
 	if err != nil {
 		return err
 	}
@@ -404,107 +403,4 @@ func loadCSV(p string) ([][]string, error) {
 		return nil, err
 	}
 	return rows, nil
-}
-
-// calculateGlobalSeriesData adds some top level countries which are inexplicably missing from the original dataset
-// presumably they calculate these on the fly
-func calculateGlobalSeriesData() error {
-
-	// Fetch series
-	China, err := series.FetchSeries("China", "")
-	if err != nil {
-		return err
-	}
-	Australia, err := series.FetchSeries("Australia", "")
-	if err != nil {
-		return err
-	}
-	Canada, err := series.FetchSeries("Canada", "")
-	if err != nil {
-		return err
-	}
-	Global, err := series.FetchSeries("", "")
-	if err != nil {
-		return err
-	}
-
-	// NB not thread safe, use only for initial setup when not running, NEVER for updates after
-	// Comment out after dataset is up and running?
-	// alternatively call this within original setup?
-	data := series.DataSet()
-
-	// Add global country entries for countries with data broken down at province level
-	// these are missing in the datasets from JHU for some reason, though US is now included
-	for _, s := range data {
-
-		// Build an overall China series
-		if s.Country == "China" {
-			err = China.MergeSeries(s)
-			if err != nil {
-				return err
-			}
-		}
-
-		// Build an overall Australia series
-		if s.Country == "Australia" {
-			err = Australia.MergeSeries(s)
-			if err != nil {
-				return err
-			}
-		}
-
-		// Build an overall Canada series
-		if s.Country == "Canada" {
-			err = Canada.MergeSeries(s)
-			if err != nil {
-				return err
-			}
-		}
-
-		if shouldMergeToGlobal(s) {
-			//	log.Printf("global:%s-%d", s.Country, s.TotalDeaths())
-			err = Global.MergeSeries(s)
-			if err != nil {
-				return err
-			}
-		} else {
-			if s.TotalDeaths() > 0 {
-				//	log.Printf("ignore for global:%s deaths:%d", s, s.TotalDeaths())
-			}
-		}
-	}
-
-	// Sort by deaths desc
-	if false {
-		sort.Stable(data)
-	}
-
-	return nil
-}
-
-// shouldMergeToGlobal returns true if this series should be added to global
-func shouldMergeToGlobal(s *series.Data) bool {
-	if s.IsGlobal() {
-		return false
-	}
-
-	// Exclude our extra series from global
-	if s.IsCountry() {
-		if s.Country == "China" || s.Country == "Australia" || s.Country == "Canada" {
-			return false
-		}
-	}
-
-	// Exclude US provinces from totals as we have a global entry
-	if s.IsProvince() && s.Country == "US" {
-		return false
-	}
-
-	// Exclude our extra UK provinces from gloval total as we have a UK entry from JHU
-	if s.Country == "United Kingdom" && (s.Province == "England" || s.Province == "Scotland" || s.Province == "Wales" || s.Province == "Northern Ireland") {
-		return false
-	}
-
-	// By default return true
-	return true
 }
