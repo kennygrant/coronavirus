@@ -97,8 +97,8 @@ func (slice Slice) ProvinceOptions(country string) (options []Option) {
 
 	options = append(options, Option{Name: "All Areas", Value: ""})
 
-	// Ignore UK and France for now as these are just outlying areas, not a breakdown
-	if country == "United Kingdom" || country == "France" {
+	// Ignore France for now as these are just outlying areas, not a breakdown
+	if country == "France" {
 		return options
 	}
 
