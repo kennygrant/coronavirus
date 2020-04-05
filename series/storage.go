@@ -3,6 +3,7 @@ package series
 import (
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -60,12 +61,13 @@ func LoadData(dataPath string) error {
 
 	// Now load our main series file - this contains all historical data
 	seriesPath := filepath.Join(dataPath, "series.csv")
-	err = LoadSeries(seriesPath)
+	err = Load(seriesPath)
 	if err != nil {
 		return err
 	}
 
-	// Load a daily series file of incomplete data for today - TODO
+	// If we don't have it already, add a set of data for today
+	dataset.AddToday()
 
 	// Finally sort the dataset by deaths, then alphabetically by country/province
 	sort.Stable(dataset)
@@ -104,17 +106,83 @@ func LoadAreas(p string) error {
 	return nil
 }
 
-// LoadSeries loads our global series file
+// Save saves the existing series to a file at the path given
+// this is used for automatic updates of data from data sources
+func Save(p string) error {
+
+	if len(dataset) == 0 {
+		return fmt.Errorf("series: save on empty data set")
+	}
+
+	days := len(dataset[0].Days)
+	if days == 0 {
+		return fmt.Errorf("series: save on empty data set")
+	}
+
+	// Lock during save operation
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	var seriesData [][]int
+
+	// Sort the dataset by id for saving
+	sort.Slice(dataset, func(i, j int) bool {
+		return dataset[i].ID < dataset[j].ID
+	})
+
+	// We save the series per day rather than every series at once
+	// so that additional days are at the end of the file
+	// For every series, save the data to an array (if non-zero)
+	// it would perhaps be more intuitive to order by area_id instead first
+	for i := 0; i < days; i++ {
+		dayNumber := i + 1
+		for _, s := range dataset {
+			d := s.Days[i]
+			if !d.IsZero() {
+				seriesData = append(seriesData, []int{dayNumber, s.ID, d.Deaths, d.Confirmed, d.Recovered, d.Tested})
+			}
+		}
+	}
+
+	// Resort the dataset in our preferred order
+	sort.Sort(dataset)
+
+	// Write the data out to files - our data is simple so we write directly
+	headerRow := fmt.Sprintf("day,area_id,deaths,confirmed,recovered,tested\n")
+	var row string
+
+	// SERIES DATA file is saved at path given, over existing file if required
+	f, err := os.Create(p)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Write header
+	_, err = f.WriteString(headerRow)
+	if err != nil {
+		return fmt.Errorf("failed to write series file:%s", err)
+	}
+	// Write days
+	for _, d := range seriesData {
+		row = fmt.Sprintf("%d,%d,%d,%d,%d,%d\n", d[0], d[1], d[2], d[3], d[4], d[5])
+		_, err = f.WriteString(row)
+		if err != nil {
+			return fmt.Errorf("failed to write day file:%s", err)
+		}
+	}
+
+	return nil
+}
+
+// Load loads our global series file
 // this contains all data in the sparse format (no rows for zero data):
 // day, area_id, deaths, confirmed, recovered, tested
 // dataset must be locked while performing this operation
-func LoadSeries(p string) error {
+func Load(p string) error {
 
 	// Make an assumption about the starting date for our data - checked below by checking header
-	startDate := seriesStartDate
 	// Make an assumption based on that start date of the length of our data file
-	// we expect it to be
-	days := int(time.Now().UTC().Sub(startDate).Hours() / 24)
+	days := int(time.Now().UTC().Sub(seriesStartDate).Hours() / 24)
 
 	log.Printf("load: loading series:%s days:%d", p, days)
 

@@ -37,6 +37,9 @@ func main() {
 		log.Printf("server: starting in production mode")
 	}
 
+	// Schedule a regular data update/reload
+	series.ScheduleUpdate()
+
 	// Load our data
 	err := series.LoadData("./data")
 	if err != nil {

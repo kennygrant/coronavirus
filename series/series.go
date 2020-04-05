@@ -534,6 +534,26 @@ func (d *Data) AddDays(count int) {
 	}
 }
 
+// AddToday adds a day, but sets the data to that of the last day
+// bounds checks are not performed
+func (d *Data) AddToday() {
+	if len(d.Days) == 0 {
+		return
+	}
+
+	// Get data for the last day, change the date, but use other data unchanged
+	// this will be updated throughout the day as more data comes in
+	lastDay := d.LastDay()
+	day := &Day{
+		Date:      lastDay.Date.AddDate(0, 0, 1),
+		Deaths:    lastDay.Deaths,
+		Confirmed: lastDay.Confirmed,
+		Recovered: lastDay.Recovered,
+		Tested:    lastDay.Tested,
+	}
+	d.Days = append(d.Days, day)
+}
+
 // FIXME - I think this won't be required
 
 // AddDay adds a day to this series

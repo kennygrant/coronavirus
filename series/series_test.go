@@ -106,7 +106,7 @@ func TestLoadSeries(t *testing.T) {
 
 	// Now load the test series
 	p, _ := filepath.Abs("testdata/series_deaths.csv")
-	err := LoadSeries(p)
+	err := Load(p)
 	if err != nil {
 		t.Fatalf("series: load failed:%s", err)
 	}

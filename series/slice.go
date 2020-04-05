@@ -22,6 +22,29 @@ func (slice Slice) Less(i, j int) bool {
 	return slice[i].Country < slice[j].Country
 }
 
+// AddToday adds a day for today's date to the end of the dataset
+// if today already exists on the global slice, it does nothing
+func (slice Slice) AddToday() error {
+	if len(slice) < 1 {
+		return fmt.Errorf("series: attempt to add today to empty dataset")
+	}
+
+	// Work out whether we already have today in the first slice data
+	// NB we assume a certain start date for today
+	days := int(time.Now().UTC().Sub(seriesStartDate).Hours()/24) + 1
+	if days < len(slice[0].Days) {
+		return nil
+	}
+
+	// If here we still need to add today to all our slices, based on data from yesterday
+	for _, s := range slice {
+		s.AddToday()
+	}
+
+	return nil
+
+}
+
 // FetchDate fetches the datapoint for a given datum and date
 func (slice Slice) FetchDate(country, province string, datum int, date time.Time) (int, error) {
 	// Find the series, if none found return 0
@@ -97,10 +120,10 @@ func (slice Slice) ProvinceOptions(country string) (options []Option) {
 
 	options = append(options, Option{Name: "All Areas", Value: ""})
 
-	// Ignore France for now as these are just outlying areas, not a breakdown
-	if country == "France" {
-		return options
-	}
+	// Some countries don't have complete data (France, Netherlands)
+	// but we'll leave them in even though they don't have a proper regional breakdown
+	// as the outlying areas are otherwise hidden from the dataset
+	// Typically this is dependencies and former colonies (France etc)
 
 	for _, s := range slice {
 		if s.Country == country && s.Province != "" {
