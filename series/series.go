@@ -497,6 +497,11 @@ func (d *Data) MergeData(startDate time.Time, dataKind int, values []int) error 
 // start dates are assumed to be the same
 func (d *Data) MergeSeries(series *Data) error {
 
+	// Change updated at if required
+	if d.UpdatedAt.Before(series.UpdatedAt) {
+		d.UpdatedAt = series.UpdatedAt
+	}
+
 	// Add days if required
 	if len(d.Days) < len(series.Days) {
 		//log.Printf("addDays:%d", len(series.Days)-len(d.Days))
