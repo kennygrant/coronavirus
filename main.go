@@ -43,9 +43,9 @@ func main() {
 	}
 
 	// Schedule a regular data update/reload - don't bother in development except when testing
-	//	if !development {
-	ScheduleUpdates()
-	//	}
+	if !development {
+		ScheduleUpdates()
+	}
 
 	// Load our template files into memory
 	loadTemplates()

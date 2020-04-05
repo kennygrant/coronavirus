@@ -98,9 +98,11 @@ func (d *Data) Format(i int) string {
 		return fmt.Sprintf("%d", i)
 	} else if i < 1000000 {
 		return fmt.Sprintf("%.1fk", float64(i)/1000)
+	} else if i < 1000000000 {
+		return fmt.Sprintf("%.3gm", float64(i)/1000000)
 	}
 
-	return fmt.Sprintf("%.3gm", float64(i)/1000000)
+	return fmt.Sprintf("%.2gb", float64(i)/1000000000)
 }
 
 // Global returns true if this is the global series

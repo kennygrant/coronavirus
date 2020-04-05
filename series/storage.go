@@ -204,7 +204,7 @@ func Load(p string) error {
 
 	// Make an assumption about the starting date for our data - checked below by checking header
 	// Make an assumption based on that start date of the length of our data file
-	days := int(time.Now().UTC().Sub(seriesStartDate).Hours() / 24)
+	days := int(time.Now().UTC().Sub(seriesStartDate).Hours()/24) + 1
 
 	log.Printf("load: loading series:%s days:%d", p, days)
 

@@ -61,6 +61,9 @@
     h2 .tested {
       color:rgba(32,163,32,0.7);
     }
+    h2 .population {
+        color:#aaa;
+    }
     .filters {
         padding:0.5rem 1rem;
         margin:0 auto;
@@ -172,8 +175,8 @@
 <body>
     <a name="top"></a>
     <header>
-    <h1><span id="chart_title">{{.series.Title}}</span> Coronavirus</h1>
-    <h2><span class="deaths">{{.series.Format .allTimeDeaths}} Deaths</span> &nbsp; <span class="confirmed">{{.series.Format .allTimeConfirmed}} Confirmed</span> {{ if gt .allTimeTested 0 }}&nbsp; <span class="tested">{{.series.Format .allTimeTested}} Tested</span>{{end}}</h2>
+    <h1><span id="chart_title">{{.series.Title}}</span> Coronavirus Cases</h1>
+    <h2><span class="deaths">{{.series.Format .allTimeDeaths}} Deaths</span> &nbsp; <span class="confirmed">{{.series.Format .allTimeConfirmed}} Confirmed</span> {{ if gt .allTimeTested 0 }}&nbsp; <span class="tested">{{.series.Format .allTimeTested}} Tested</span>{{end}} &nbsp; <span class="population">Population {{.series.Format .series.Population}}</span></h2>
     </header>
     
     <article>
