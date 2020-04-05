@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/csv"
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -15,13 +17,36 @@ import (
 func ScheduleUpdates() {
 	log.Printf("series: scheduling updates")
 
-	// As a test just try calling update first
+	// Call update frequent immediately on load to start loading data for todaay
 	go updateFrequent()
+
+	// Schedule calls daily and every 10 mins to update data
+	now := time.Now()
+	when := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 1, 0, time.UTC)
+	daily := time.Hour * 24       // daily
+	regularly := 15 * time.Minute // every 15 minutes
+
+	ScheduleAt(updateFrequent, when, regularly)
+	ScheduleAt(updateDaily, when, daily)
+
 }
 
-// I think for manual updates just hit the reload endpont
+// updateDaily adds a new day to all of our series for today (based on yesterday's figures)
+// it should be run just after UTC zero hours
+func updateDaily() {
+	log.Printf("update: updating daily at:%s", time.Now().UTC())
 
-// updateFrequent updaes data frequently (every 30 minutes say)
+	// Update the series to add today
+	err := series.AddToday()
+	if err != nil {
+		log.Printf("update: failed to add today to series:%s", err)
+		return
+	}
+}
+
+// I think for manual updates just edit files and hit the reload endpont
+
+// updateFrequent updates data frequently (every 30 minutes say)
 // Called in a goroutine
 // the dataset is somewhat inconsistent and therefore requires some massaging
 // for example not all countries have global data
@@ -30,51 +55,31 @@ func updateFrequent() {
 	// Pull the repo first with git to be sure we're up to date
 	err := gitPull()
 	if err != nil {
-		log.Printf("server: failed to pull repo:%s", err)
-		return
+		log.Printf("update: failed to pull repo:%s", err)
 	}
 
-	// Download the country cases file into csv rows
-	filePath := "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/web-data/data/cases_country.csv"
-	rows, err := downloadCSV(filePath)
+	// NB on failre of a download we just continue
+
+	err = updateUKCases()
 	if err != nil {
-		log.Printf("server: failed to download JHU csv:%s", err)
-		return
+		log.Printf("update: UK FAILED:%s", err)
 	}
 
-	// This data has a specific format, ask the series to decode
-	// and update the changed series in memory
-	err = series.UpdateFromJHUCountryCases(rows)
+	err = updateJHUCases()
 	if err != nil {
-		log.Printf("server: failed to update from JHU data :%s", err)
-		return
-	}
-
-	// Update from the cases_states file for US states data
-
-	// Download the US states cases file into csv rows
-	filePath = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/web-data/data/cases_state.csv"
-	rows, err = downloadCSV(filePath)
-	if err != nil {
-		log.Printf("server: failed to download JHU states csv:%s", err)
-		return
-	}
-
-	// This data has a specific format, ask the series to decode
-	// and update the changed series in memory
-	err = series.UpdateFromJHUStatesCases(rows)
-	if err != nil {
-		log.Printf("server: failed to update from JHU data :%s", err)
-		return
+		log.Printf("update: JHU FAILED:%s", err)
 	}
 
 	// Now update our global series which are unfortunteley not contained in this data
 	err = series.CalculateGlobalSeriesData()
 	if err != nil {
-		log.Printf("server: failed to calculate global series :%s", err)
+		log.Printf("update: failed to calculate global series :%s", err)
 		return
 	}
 
+	// We should perhaps now save to disk and attempt to commit the change?
+	// this would keep the repo data up to date with automated updates as a ref for others?
+	// it would also give a nice audit trail of updates with clear git diffs
 	/*
 		// Now save the series file to disk
 		err = series.Save("data/series.csv")
@@ -92,7 +97,74 @@ func updateFrequent() {
 
 }
 
-//
+// Update UK stats linked from gov.uk
+// https://www.gov.uk/guidance/coronavirus-covid-19-information-for-the-public#number-of-cases-and-deaths
+func updateUKCases() error {
+
+	filePath := "https://services1.arcgis.com/0IrmI40n5ZYxTUrV/arcgis/rest/services/DailyIndicators/FeatureServer/0/query?where=TotalUKCases%3E0&objectIds=&time=&resultType=standard&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pgeojson&token="
+
+	jsonData, err := downloadJSON(filePath)
+	if err != nil {
+		return fmt.Errorf("server: failed to download UK json:%s", err)
+	}
+
+	err = series.UpdateFromUKStats(jsonData)
+	if err != nil {
+		return fmt.Errorf("server: failed to parse UK json:%s", err)
+	}
+
+	return nil
+}
+
+func updateJHUCases() error {
+
+	// Download the country cases file into csv rows
+	filePath := "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/web-data/data/cases_country.csv"
+	rows, err := downloadCSV(filePath)
+	if err != nil {
+		return fmt.Errorf("server: failed to download JHU csv:%s", err)
+	}
+
+	// This data has a specific format, ask the series to decode
+	// and update the changed series in memory
+	err = series.UpdateFromJHUCountryCases(rows)
+	if err != nil {
+		return fmt.Errorf("server: failed to update from JHU data :%s", err)
+	}
+
+	// Update from the cases_states file for US states data
+
+	// Download the US states cases file into csv rows
+	filePath = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/web-data/data/cases_state.csv"
+	rows, err = downloadCSV(filePath)
+	if err != nil {
+		return fmt.Errorf("server: failed to download JHU states csv:%s", err)
+	}
+
+	// This data has a specific format, ask the series to decode
+	// and update the changed series in memory
+	err = series.UpdateFromJHUStatesCases(rows)
+	if err != nil {
+		return fmt.Errorf("server: failed to update from JHU data :%s", err)
+	}
+	return nil
+
+}
+
+// downloadJSON downloads and parses the url as generic json
+func downloadJSON(url string) (map[string]interface{}, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	jsonData := make(map[string]interface{})
+	err = json.NewDecoder(resp.Body).Decode(&jsonData)
+	return jsonData, err
+}
+
+// downloadCSV downloads and parses the url as csv
 func downloadCSV(url string) ([][]string, error) {
 	resp, err := http.Get(url)
 	if err != nil {

@@ -42,6 +42,9 @@
     h3.confirmed {
       color:rgba(163,32,32,0.7);
     }
+    h3.tested {
+         color:rgba(32,163,32,0.7);
+    }
     h4 {
         margin:0;
         font-weight:100;
@@ -54,6 +57,9 @@
     }
     h2 .confirmed {
         color:rgba(163,32,32,0.7);
+    }
+    h2 .tested {
+      color:rgba(32,163,32,0.7);
     }
     .filters {
         padding:0.5rem 1rem;
@@ -167,7 +173,7 @@
     <a name="top"></a>
     <header>
     <h1><span id="chart_title">{{.series.Title}}</span> Coronavirus</h1>
-    <h2><span class="deaths">{{.series.Format .allTimeDeaths}} Deaths</span> &nbsp; <span class="confirmed">{{.series.Format .allTimeConfirmed}} Confirmed</span></h2>
+    <h2><span class="deaths">{{.series.Format .allTimeDeaths}} Deaths</span> &nbsp; <span class="confirmed">{{.series.Format .allTimeConfirmed}} Confirmed</span> {{ if gt .allTimeTested 0 }}&nbsp; <span class="tested">{{.series.Format .allTimeTested}} Tested</span>{{end}}</h2>
     </header>
     
     <article>

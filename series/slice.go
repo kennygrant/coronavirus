@@ -32,7 +32,7 @@ func (slice Slice) AddToday() error {
 	// Work out whether we already have today in the first slice data
 	// NB we assume a certain start date for today
 	days := int(time.Now().UTC().Sub(seriesStartDate).Hours()/24) + 1
-	if days < len(slice[0].Days) {
+	if days <= len(slice[0].Days) {
 		return nil
 	}
 

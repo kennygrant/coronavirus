@@ -1,0 +1,26 @@
+{
+  "type" : "FeatureCollection", 
+  "features" : [
+    {
+      "type" : "Feature", 
+      "id" : 1, 
+      "geometry" : null, 
+      "properties" : {
+        "DateVal" : 1586044800000, 
+        "TotalUKCases" : 47806, 
+        "NewUKCases" : 5914, 
+        "TotalUKDeaths" : 4934, 
+        "DailyUKDeaths" : 621, 
+        "EnglandCases" : 39814, 
+        "EnglandDeaths" : 4494, 
+        "ScotlandCases" : 3706, 
+        "ScotlandDeaths" : 218, 
+        "WalesCases" : 3197, 
+        "WalesDeaths" : 166, 
+        "NICases" : 1089, 
+        "NIDeaths" : 56, 
+        "FID" : 1
+      }
+    }
+  ]
+}

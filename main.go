@@ -103,6 +103,8 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	// Get the total counts first for the page
 	allTimeDeaths := s.TotalDeaths()
 	allTimeConfirmed := s.TotalConfirmed()
+	allTimeRecovered := s.TotalRecovered() // unreliable as yet
+	allTimeTested := s.TotalTested()
 
 	mobile := strings.Contains(strings.ToLower(r.UserAgent()), "mobile")
 
@@ -155,6 +157,8 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		"series":           s,
 		"allTimeDeaths":    allTimeDeaths,
 		"allTimeConfirmed": allTimeConfirmed,
+		"allTimeRecovered": allTimeRecovered,
+		"allTimeTested":    allTimeTested,
 		"periodOptions":    series.PeriodOptions(),
 		"countryOptions":   series.CountryOptions(),
 		"provinceOptions":  series.ProvinceOptions(s.Country),
@@ -205,6 +209,8 @@ func handleReload(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", 302)
 	}
 
+	// Also reload today from online data
+	go updateFrequent()
 }
 
 // param returns one param string value

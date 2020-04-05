@@ -13,6 +13,10 @@ import (
 // Cols: Country_Region,Last_Update,Lat,Long_,Confirmed,Deaths,Recovered,Active
 func UpdateFromJHUCountryCases(rows [][]string) error {
 
+	// Lock during add operation
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	log.Printf("series: update from JHU country cases %d rows", len(rows))
 
 	// For each row in the input data, reject if admin2 completed
@@ -55,6 +59,10 @@ func UpdateFromJHUCountryCases(rows [][]string) error {
 //  0    1    			2				3			4  5     	6		7		8		9
 // FIPS,Province_State,Country_Region,Last_Update,Lat,Long_,Confirmed,Deaths,Recovered,Active
 func UpdateFromJHUStatesCases(rows [][]string) error {
+
+	// Lock during add operation
+	mutex.Lock()
+	defer mutex.Unlock()
 
 	log.Printf("series: update from JHU states cases %d rows", len(rows))
 
@@ -121,9 +129,119 @@ func readJHURowData(updatedstr, deathsstr, confirmedstr, recoveredstr string) (t
 	return updated, deaths, confirmed, recovered, nil
 }
 
+// UKStats stores stats read from UK gov json
+type UKStats struct {
+	UKCases        int
+	UKDeaths       int
+	EnglandCases   int
+	EnglandDeaths  int
+	ScotlandCases  int
+	ScotlandDeaths int
+	WalesCases     int
+	WalesDeaths    int
+	NICases        int
+	NIDeaths       int
+}
+
+// UpdateFromUKStats reads stats from the official UK source
+// unfortunately this changes every day to the latest day's stats
+// there is no coherent UK historical record
+func UpdateFromUKStats(jsonData map[string]interface{}) error {
+
+	stats, err := parseUKJSON(jsonData)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("uk stats:%v", stats)
+
+	// Lock during add operation
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	// Grab the series concerned and update them
+	uk, err := dataset.FetchSeries("United Kingdom", "")
+	if err != nil {
+		return fmt.Errorf("failed to fetch uk series")
+	}
+	uk.UpdateToday(time.Now().UTC(), stats.UKDeaths, stats.UKCases, 0, 0)
+
+	england, err := dataset.FetchSeries("United Kingdom", "England")
+	if err != nil {
+		return fmt.Errorf("failed to fetch England series")
+	}
+	england.UpdateToday(time.Now().UTC(), stats.EnglandDeaths, stats.EnglandCases, 0, 0)
+
+	scotland, err := dataset.FetchSeries("United Kingdom", "Scotland")
+	if err != nil {
+		return fmt.Errorf("failed to fetch Scotland series")
+	}
+	scotland.UpdateToday(time.Now().UTC(), stats.ScotlandDeaths, stats.ScotlandCases, 0, 0)
+
+	wales, err := dataset.FetchSeries("United Kingdom", "Wales")
+	if err != nil {
+		return fmt.Errorf("failed to fetch Wales series")
+	}
+	wales.UpdateToday(time.Now().UTC(), stats.WalesDeaths, stats.WalesCases, 0, 0)
+
+	northernIreland, err := dataset.FetchSeries("United Kingdom", "Northern Ireland")
+	if err != nil {
+		return fmt.Errorf("failed to fetch NI series")
+	}
+	northernIreland.UpdateToday(time.Now().UTC(), stats.NIDeaths, stats.NICases, 0, 0)
+
+	return nil
+}
+
+func parseUKJSON(jsonData map[string]interface{}) (UKStats, error) {
+
+	var stats UKStats
+
+	// Find the data we're interested in
+	features, ok := jsonData["features"].([]interface{})
+	if !ok {
+		return stats, fmt.Errorf("json format unexpected:%v", jsonData["features"])
+	}
+
+	properties, ok := features[0].(map[string]interface{})["properties"].(map[string]interface{})
+	if !ok {
+		return stats, fmt.Errorf("json format unexpected:%v", jsonData["features"])
+	}
+
+	for k, v := range properties {
+		if k == "TotalUKCases" {
+			stats.UKCases = int(v.(float64))
+		} else if k == "TotalUKDeaths" {
+			stats.UKDeaths = int(v.(float64))
+		} else if k == "EnglandCases" {
+			stats.EnglandCases = int(v.(float64))
+		} else if k == "EnglandDeaths" {
+			stats.EnglandDeaths = int(v.(float64))
+		} else if k == "ScotlandCases" {
+			stats.ScotlandCases = int(v.(float64))
+		} else if k == "ScotlandDeaths" {
+			stats.ScotlandDeaths = int(v.(float64))
+		} else if k == "WalesCases" {
+			stats.WalesCases = int(v.(float64))
+		} else if k == "WalesDeaths" {
+			stats.WalesDeaths = int(v.(float64))
+		} else if k == "NICases" {
+			stats.NICases = int(v.(float64))
+		} else if k == "NIDeaths" {
+			stats.NIDeaths = int(v.(float64))
+		}
+	}
+
+	return stats, nil
+}
+
 // CalculateGlobalSeriesData adds some top level countries which are inexplicably missing from the original dataset
 // presumably they calculate these on the fly
 func CalculateGlobalSeriesData() error {
+
+	// Lock during add operation
+	mutex.Lock()
+	defer mutex.Unlock()
 
 	// Fetch series
 	China, err := dataset.FetchSeries("China", "")

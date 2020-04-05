@@ -34,6 +34,28 @@ const (
 	DataTodayCountry = 21
 )
 
+// AddToday adds a day to our dataset
+// usually called after zero hours
+func AddToday() error {
+
+	// Lock during add operation
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	// If we don't have it already, add a set of data for today
+	dataset.AddToday()
+
+	// We should also save out in case of restart?
+	/*
+		err := Save("data/series.csv")
+		if err != nil {
+			return fmt.Errorf("series: failed to save series data:%s", err)
+		}
+	*/
+
+	return nil
+}
+
 // LoadData reloads all data from our data files in dataPath
 // Dataset is locked for writing inside functions below
 func LoadData(dataPath string) error {
