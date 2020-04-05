@@ -16,7 +16,6 @@ func PeriodOptions() (options []Option) {
 	options = append(options, Option{Name: "14 Days", Value: "14"})
 	options = append(options, Option{Name: "7 Days", Value: "7"})
 	options = append(options, Option{Name: "3 Days", Value: "3"})
-	options = append(options, Option{Name: "2 Days", Value: "2"})
 
 	return options
 }

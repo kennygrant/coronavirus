@@ -235,6 +235,15 @@ func (d *Data) Period(days int) *Data {
 	}
 }
 
+// FirstDay returns the last day in the series
+// a blank day is returned if no days
+func (d *Data) FirstDay() *Day {
+	if len(d.Days) == 0 {
+		return &Day{}
+	}
+	return d.Days[0]
+}
+
 // LastDay returns the last day in the series
 // a blank day is returned if no days
 func (d *Data) LastDay() *Day {
@@ -255,22 +264,22 @@ func (d *Data) PenultimateDay() *Day {
 
 // TotalDeaths returns the cumulative death due to COVID-19 for this series
 func (d *Data) TotalDeaths() int {
-	return d.LastDay().Deaths
+	return d.LastDay().Deaths - d.FirstDay().Deaths
 }
 
 // TotalConfirmed returns the cumulative confirmed cases of COVID-19 for this series
 func (d *Data) TotalConfirmed() int {
-	return d.LastDay().Confirmed
+	return d.LastDay().Confirmed - d.FirstDay().Confirmed
 }
 
 // TotalRecovered returns the cumulative recovered cases of COVID-19 for this series
 func (d *Data) TotalRecovered() int {
-	return d.LastDay().Recovered
+	return d.LastDay().Recovered - d.FirstDay().Recovered
 }
 
 // TotalTested returns the cumulative tested cases of COVID-19 for this series
 func (d *Data) TotalTested() int {
-	return d.LastDay().Tested
+	return d.LastDay().Tested - d.FirstDay().Tested
 }
 
 // DeathsToday returns deaths for last day in series - day before

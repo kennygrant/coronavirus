@@ -42,8 +42,10 @@ func main() {
 		log.Fatalf("server: failed to load new data:%s", err)
 	}
 
-	// Schedule a regular data update/reload
+	// Schedule a regular data update/reload - don't bother in development except when testing
+	//	if !development {
 	ScheduleUpdates()
+	//	}
 
 	// Load our template files into memory
 	loadTemplates()
