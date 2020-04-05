@@ -14,7 +14,7 @@ import (
 
 	"golang.org/x/crypto/acme/autocert"
 
-	"github.com/kennygrant/coronavirus/covid"
+	//	"github.com/kennygrant/coronavirus/covid"
 	"github.com/kennygrant/coronavirus/series"
 )
 
@@ -31,34 +31,16 @@ func main() {
 		development = true
 	}
 
-	// Load alternative data in parallel
-	if os.Getenv("COVID") == "alt" {
-		development = true
-		err := series.LoadData("./data")
-		if err != nil {
-			log.Fatalf("server: failed to load new data:%s", err)
-		}
-	}
-
 	if development {
 		log.Printf("server: starting in development mode")
 	} else {
 		log.Printf("server: starting in production mode")
 	}
 
-	// Schedule a regular fetch of data at a specified time daily
-	covid.ScheduleDataFetch()
-
-	// Load the data first
-	err := covid.LoadData()
+	// Load our data
+	err := series.LoadData("./data")
 	if err != nil {
-		log.Fatalf("server: failed to load data:%s", err)
-	}
-
-	// Fetch all data again on first load in production
-	// don't do this in dev normally
-	if !development {
-		go covid.FetchData()
+		log.Fatalf("server: failed to load new data:%s", err)
 	}
 
 	// Load our template files into memory
@@ -67,6 +49,7 @@ func main() {
 	// Set up the https server with the handler attached to serve this data in a template
 	http.HandleFunc("/favicon.ico", handleFile)
 	http.HandleFunc("/", handleHome)
+	http.HandleFunc("/reload", handleReload)
 
 	// Start a server on port 443 (or another port if dev specified)
 	if development {
@@ -108,25 +91,16 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	// Get the parameters from the url
 	country, province, period, startDeaths := parseParams(r)
 
-	/*
-		// Fetch the series requested
-		seriesNew, err := series.FetchSeries(country, province)
-		if err != nil {
-			http.NotFound(w, r)
-			return
-		}
-	*/
-
 	// Fetch the series concerned - if both are blank we'll get the global series
-	series, err := covid.FetchSeries(country, province)
+	s, err := series.FetchSeries(country, province)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 
 	// Get the total counts first for the page
-	allTimeDeaths := series.TotalDeaths()
-	allTimeConfirmed := series.TotalConfirmed()
+	allTimeDeaths := s.TotalDeaths()
+	allTimeConfirmed := s.TotalConfirmed()
 
 	mobile := strings.Contains(strings.ToLower(r.UserAgent()), "mobile")
 
@@ -147,7 +121,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 
 	// Limit by period if applied
 	if period > 0 {
-		series = series.Days(period)
+		s = s.Period(period)
 	}
 
 	scale := "linear"
@@ -158,31 +132,30 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// For global compare growth rate of top 20 series
-	var comparisons covid.SeriesSlice
-	if series.Global() {
-		comparisons = covid.TopSeries(series.Country, 20)
-	} else if series.European() {
-		comparisons = covid.SelectedEuropeanSeries(country, 10)
+	var comparisons series.Slice
+	if s.IsGlobal() {
+		comparisons = series.TopSeries(country, 10)
+	} else if s.IsEuropean() {
+		comparisons = series.SelectedEuropeanSeries(country, 10)
 	} else {
 		// Else fetch a selection of copmarative series (for example nearby countries)
-		comparisons = covid.SelectedSeries(series.Country, 10)
+		comparisons = series.SelectedSeries(country, 10)
 	}
 
 	log.Printf("comparisons:%d", len(comparisons))
 
 	// Set up context with data
 	context := map[string]interface{}{
-		"period":      strconv.Itoa(period),
-		"country":     series.Key(series.Country),
-		"province":    series.Key(series.Province),
-		"comparisons": comparisons,
-		"series":      series,
-		//"seriesNew":        seriesNew,
+		"period":           strconv.Itoa(period),
+		"country":          s.Key(s.Country),
+		"province":         s.Key(s.Province),
+		"comparisons":      comparisons,
+		"series":           s,
 		"allTimeDeaths":    allTimeDeaths,
 		"allTimeConfirmed": allTimeConfirmed,
-		"periodOptions":    covid.PeriodOptions(),
-		"countryOptions":   covid.CountryOptions(),
-		"provinceOptions":  covid.ProvinceOptions(series.Country),
+		"periodOptions":    series.PeriodOptions(),
+		"countryOptions":   series.CountryOptions(),
+		"provinceOptions":  series.ProvinceOptions(s.Country),
 		"jsonURL":          fmt.Sprintf("%s.json?period=%d", r.URL.Path, period),
 		"scale":            scale,
 		"scaleURL":         scaleURL,
@@ -210,6 +183,26 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("template render error:%s", err)
 		http.Error(w, err.Error(), 500)
+	}
+
+}
+
+// handleReload
+// FIXME - require authentication to avoid DOS
+func handleReload(w http.ResponseWriter, r *http.Request) {
+
+	log.Printf("reload:%s", r.URL)
+
+	err := series.LoadData("./data")
+
+	// Check for errors on reload
+	if err != nil {
+		log.Printf("reload error:%s", err)
+		http.Error(w, err.Error(), 500)
+	} else {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(200)
+		w.Write([]byte("reloaded"))
 	}
 
 }

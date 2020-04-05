@@ -479,34 +479,6 @@ var chartComparisonOptions = {
     maintainAspectRatio:false
 }
 
-var colorValues = [
-	[209, 17, 65],
-	[0, 177, 89],
-	[0, 174, 219],
-	[243, 119, 53],
-	[100, 85, 236],
-    [255, 40, 40],
-	[255, 193, 0],
-	[123, 179, 255],
-	[232, 106, 240],
-	[49, 150, 138],
-    [0, 255, 65],
-	[200, 200, 200],
-	[209, 57, 165],
-	[109, 17, 65],
-	[100, 177, 89],
-	[130, 174, 219],
-	[143, 119, 53],
-	[155, 40, 40],
-	[200, 85, 236],
-	[155, 193, 0],
-	[23, 179, 255],
-	[2, 106, 240],
-	[101, 223, 138],
-	[109, 57, 165]
-];
-
-
 {{ $firstSeries := (index .comparisons 0) }}
 
 var chartComparisonDeathsData = {
@@ -518,10 +490,10 @@ var chartComparisonDeathsData = {
             pointRadius: 3,
 			pointHoverRadius: 7,
             borderWidth: 1,
-            color:"rgb("+colorValues[{{$i}}]+")",
-            borderColor:"rgb("+colorValues[{{$i}}]+")",
-            backgroundColor:"rgb("+colorValues[{{$i}}]+")",
-            label: {{ .Description }},
+            color:"{{.Color}}",
+            borderColor:"{{.Color}}",
+            backgroundColor:"{{.Color}}",
+            label: {{ .Title }},
             data: {{ .DeathsFrom $.startDeaths }}
             }
        {{ end }}]
@@ -535,33 +507,6 @@ var chartComparisonDeaths = new Chart(chartComparisonDeathsCtx, {
     data: chartComparisonDeathsData
 });
 
-/*
-var chartComparisonNewDeathsData = {
-      labels:{{ $firstSeries.DaysFrom ($firstSeries.NewDeathsFrom .startDeaths) }},
-      datasets:[
-      {{ range $i,$s := .comparisons}}{{if not (eq $i 0) }},{{end}}{
-            fill: false,
-            lineTension:0.1,
-            pointRadius: 3,
-			pointHoverRadius: 7,
-            borderWidth: 1,
-            color:"rgb("+colorValues[{{$i}}]+")",
-            borderColor:"rgb("+colorValues[{{$i}}]+")",
-            backgroundColor:"rgb("+colorValues[{{$i}}]+")",
-            label: {{ .Description }},
-            data: {{ .NewDeathsFrom $.startDeaths }}
-            }
-       {{ end }}]
-}
-
-var chartComparisonNewDeathsCtx = document.getElementById('chartComparisonNewDeaths').getContext('2d');
-
-var chartComparisonNewDeaths = new Chart(chartComparisonNewDeathsCtx, {
-    type: 'line',
-    options: chartComparisonOptions,
-    data: chartComparisonNewDeathsData
-});
-*/
 {{/* end comparisons */}}
 {{ end }}
 

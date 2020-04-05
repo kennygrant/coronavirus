@@ -48,6 +48,18 @@ func (slice Slice) FetchSeries(country string, province string) (*Data, error) {
 	return &Data{}, fmt.Errorf("series: not found")
 }
 
+// FindSeries returns a series (if found) for this ID
+func (slice Slice) FindSeries(seriesID int) (*Data, error) {
+
+	for _, s := range slice {
+		if s.ID == seriesID {
+			return s, nil
+		}
+	}
+
+	return &Data{}, fmt.Errorf("series: not found")
+}
+
 // PrintSeries uses our stored data to fetch a series
 func (slice Slice) PrintSeries(country string, province string) error {
 	s, err := slice.FetchSeries(country, province)

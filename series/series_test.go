@@ -35,7 +35,7 @@ func TestFormat(t *testing.T) {
 // TestLoadAreas tests loading our static test area file (with just a few areas in it)
 func TestLoadAreas(t *testing.T) {
 	p, _ := filepath.Abs("testdata/areas.csv")
-	err := loadAreas(p)
+	err := LoadAreas(p)
 	if err != nil {
 		t.Fatalf("areas: failed to load file:%s", err)
 	}
@@ -106,7 +106,7 @@ func TestLoadSeries(t *testing.T) {
 
 	// Now load the test series
 	p, _ := filepath.Abs("testdata/series_deaths.csv")
-	err := loadSeries(p)
+	err := LoadSeries(p)
 	if err != nil {
 		t.Fatalf("series: load failed:%s", err)
 	}

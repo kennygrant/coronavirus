@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Mutex to protect access to dataset below
@@ -16,6 +17,7 @@ var mutex sync.RWMutex
 // Store our dataset as a local global, use mutex to access - no direct access
 var dataset Slice
 
+// FIXME unused except for import - move there
 // Data types for imported series
 const (
 	DataNone = iota
@@ -34,60 +36,58 @@ const (
 // LoadData reloads all data from our data files in dataPath
 // Dataset is locked for writing inside functions below
 func LoadData(dataPath string) error {
+	start := time.Now().UTC()
+	defer func() {
+		log.Printf("series: loaded data in %s", time.Now().UTC().Sub(start))
+	}()
 
 	// Sanitize input
 	dataPath = filepath.Clean(dataPath)
 
+	// Lock during load operation
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	// Clear the existing data
+	dataset = Slice{}
+
 	// First load the areas data - this sets up a series per area
 	areaPath := filepath.Join(dataPath, "areas.csv")
-	err := loadAreas(areaPath)
+	err := LoadAreas(areaPath)
 	if err != nil {
 		return fmt.Errorf("data: error loading areas:%s data:%s", areaPath, err)
 	}
 
-	// Get a list of all csv files in the data path
-	files, err := filepath.Glob(dataPath + "/*.csv")
+	// Now load our main series file - this contains all historical data
+	seriesPath := filepath.Join(dataPath, "series.csv")
+	err = LoadSeries(seriesPath)
 	if err != nil {
 		return err
 	}
 
-	// Now load any series files we find in data dir
-	// these are identified by the series_ prefix
-	for _, p := range files {
-		name := filepath.Base(p)
-		if strings.HasPrefix(name, "series_") {
-			err = loadSeries(p)
-			if err != nil {
-				return err
-			}
-		}
-	}
+	// Load a daily series file of incomplete data for today - TODO
 
 	// Finally sort the dataset by deaths, then alphabetically by country/province
 	sort.Stable(dataset)
 
-	log.Printf("END LOAD NEW DATA:%d\n\n\n", len(dataset))
 	return nil
 }
 
-// loadAreas loads our areas from the specified areas file
-func loadAreas(p string) error {
+// LoadAreas loads our areas from the specified areas file
+// dataset must be locked while performing this operation
+func LoadAreas(p string) error {
 	// Open the areas CSV
 	rows, err := loadCSV(p)
 	if err != nil {
 		return err
 	}
 
-	// Lock our dataset for write
-	mutex.Lock()
-	defer mutex.Unlock()
-
 	// Walk rows reading area data (countries and provinces)
 	// for each one we create a series
 	for i, row := range rows {
 		// validate header row
 		if i == 0 {
-			if row[0] != "country" || row[1] != "province" || row[6] != "colour" {
+			if row[0] != "country" || row[1] != "province" || row[2] != "area_id" || row[7] != "colour" {
 				return fmt.Errorf("areas: invalid header row in file:%s row:%s", p, row)
 			}
 			continue
@@ -104,27 +104,30 @@ func loadAreas(p string) error {
 	return nil
 }
 
-// loadSeries loads a series file for a given datum
-// the file name is used to determine which datum to fill in
-// Country and province names must match the areas file
-func loadSeries(p string) error {
-	// Decide on the datum based on file name
-	dataType := dataTypeForPath(p)
+// LoadSeries loads our global series file
+// this contains all data in the sparse format (no rows for zero data):
+// day, area_id, deaths, confirmed, recovered, tested
+// dataset must be locked while performing this operation
+func LoadSeries(p string) error {
 
-	if dataType == DataNone {
-		return fmt.Errorf("load: invalid data type for file:%s", p)
+	// Make an assumption about the starting date for our data - checked below by checking header
+	startDate := seriesStartDate
+	// Make an assumption based on that start date of the length of our data file
+	// we expect it to be
+	days := int(time.Now().UTC().Sub(startDate).Hours() / 24)
+
+	log.Printf("load: loading series:%s days:%d", p, days)
+
+	// For every series add the right number of days up to and including today
+	for _, series := range dataset {
+		series.AddDays(days)
 	}
 
-	// Open the CSV file - one row per country
+	// Open the CSV file - one row per day per area
 	rows, err := loadCSV(p)
 	if err != nil {
 		return err
 	}
-
-	// Make an assumption about the starting date for our data - checked below by checking header
-	startDate := seriesStartDate
-
-	log.Printf("load: loading series:%s", p)
 
 	// Range rows loading data for each country from each row
 	for i, row := range rows {
@@ -132,53 +135,50 @@ func loadSeries(p string) error {
 		if i == 0 {
 			// We make assumptions about the start date rather than parsing the first date
 			// we could instead parse this date to be more flexible
-			if row[0] != "country" || row[1] != "province" || row[2] != "2020-01-22" {
+			if row[0] != "day" || row[1] != "area_id" || row[5] != "tested" {
 				return fmt.Errorf("series: invalid header row in file:%s row:%s", p, row)
 			}
 			continue
 		}
 
-		// Read data row for country
-		country := row[0]
-		province := row[1]
+		values := intValues(row)
+		if len(values) != 6 {
+			return fmt.Errorf("series: invalid row len for row:%s", row)
+		}
 
-		series, err := FetchSeries(country, province)
+		series, err := dataset.FindSeries(values[1])
 		if err != nil || series == nil {
-			log.Printf("series: series not found %s, %s", country, province)
+			log.Printf("series: series not found for id:%d", values[1])
 			continue
 		}
 
-		// Lock our dataset for writes
-		mutex.Lock()
-
-		// Add the data for this series
-		values := intValues(row[2:])
-		log.Printf("VALUES:%v %v", row[2:], values)
-		series.AddData(startDate, dataType, values)
-
-		mutex.Unlock()
-
+		//	log.Printf("series:%s day:%v", series, values)
+		// Set the series data from this row
+		series.SetDayData(values[0], values[2], values[3], values[4], values[5])
 	}
 
 	return nil
 }
 
+// MergeData on series may not be required either
+
+/* This is no longer required - would go in import */
+
 // dataTypeForFile returns a data type for this file (e.g. deaths, confirmed)
 func dataTypeForPath(p string) int {
-	dataType := DataNone
+
 	name := filepath.Base(p)
-	switch name {
-	case "series_deaths.csv":
+	if strings.Contains(name, "deaths") {
 		return DataDeaths
-	case "series_confirmed.csv":
+	} else if strings.Contains(name, "confirmed") {
 		return DataConfirmed
-	case "series_recovered.csv":
+	} else if strings.Contains(name, "recovered") {
 		return DataRecovered
-	case "series_tested.csv":
+	} else if strings.Contains(name, "tested") {
 		return DataTested
 	}
 
-	return dataType
+	return DataNone
 }
 
 // intValues converts a list of strings to ints
