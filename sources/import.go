@@ -235,6 +235,9 @@ func loadJHUSeries(p string) error {
 			if province == "British Virgin Islands" {
 				province = "Virgin Islands"
 			}
+			if province == "Falkland Islands (Islas Malvinas)" {
+				province = "Falkland Islands"
+			}
 		}
 
 		// FIXME - if in series could lock dataset for write
