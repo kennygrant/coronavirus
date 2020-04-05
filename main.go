@@ -14,7 +14,6 @@ import (
 
 	"golang.org/x/crypto/acme/autocert"
 
-	//	"github.com/kennygrant/coronavirus/covid"
 	"github.com/kennygrant/coronavirus/series"
 )
 
@@ -37,14 +36,14 @@ func main() {
 		log.Printf("server: starting in production mode")
 	}
 
-	// Schedule a regular data update/reload
-	series.ScheduleUpdate()
-
 	// Load our data
 	err := series.LoadData("./data")
 	if err != nil {
 		log.Fatalf("server: failed to load new data:%s", err)
 	}
+
+	// Schedule a regular data update/reload
+	//ScheduleUpdates()
 
 	// Load our template files into memory
 	loadTemplates()

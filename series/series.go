@@ -554,6 +554,27 @@ func (d *Data) AddToday() {
 	d.Days = append(d.Days, day)
 }
 
+// UpdateToday updates today's values only if lower than the values given
+// it also updates the date
+func (d *Data) UpdateToday(updated time.Time, deaths, confirmed, recovered, tested int) {
+	d.UpdatedAt = updated
+
+	today := d.LastDay()
+
+	if today.Deaths < deaths {
+		today.Deaths = deaths
+	}
+	if today.Confirmed < confirmed {
+		today.Confirmed = confirmed
+	}
+	if today.Recovered < recovered {
+		today.Recovered = recovered
+	}
+	if today.Tested < tested {
+		today.Tested = tested
+	}
+}
+
 // FIXME - I think this won't be required
 
 // AddDay adds a day to this series
