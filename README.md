@@ -9,7 +9,7 @@ This project uses data from to product charts of deaths, confirmed cases and rec
 
 # View the data
 
-You can see the data at https://coronavirus.projectpage.app/
+You can see the data at https://coronavirus.projectpage.app
 
 You can also access a json feed for any of the series at urls like this: https://coronavirus.projectpage.app/global.json
 
