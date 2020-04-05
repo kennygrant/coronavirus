@@ -43,15 +43,15 @@ func AddToday() error {
 	defer mutex.Unlock()
 
 	// If we don't have it already, add a set of data for today
-	dataset.AddToday()
+	err := dataset.AddToday()
+	if err != nil {
+		return fmt.Errorf("series: failed to add today on series data:%s", err)
+	}
 
-	// We should also save out in case of restart?
-	/*
-		err := Save("data/series.csv")
-		if err != nil {
-			return fmt.Errorf("series: failed to save series data:%s", err)
-		}
-	*/
+	err = Save("data/series.csv")
+	if err != nil {
+		return fmt.Errorf("series: failed to save series data:%s", err)
+	}
 
 	return nil
 }
