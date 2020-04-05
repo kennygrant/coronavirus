@@ -206,8 +206,25 @@ func (d *Data) FetchDate(date time.Time, dataKind int) int {
 
 // Period returns a subset of the series data just for the no of days specified
 func (d *Data) Period(days int) *Data {
-	// for now just return all days
-	return d
+	// If we are not long enough, just return full series
+	if days >= len(d.Days) {
+		return d
+	}
+
+	// Else return series with truncated days
+	i := len(d.Days) - days
+	return &Data{
+		ID:         d.ID,
+		Country:    d.Country,
+		Province:   d.Province,
+		Population: d.Population,
+		Latitude:   d.Latitude,
+		Longitude:  d.Longitude,
+		Color:      d.Color,
+		UpdatedAt:  d.UpdatedAt,
+		LockdownAt: d.LockdownAt,
+		Days:       d.Days[i:],
+	}
 }
 
 // LastDay returns the last day in the series
