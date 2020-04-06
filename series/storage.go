@@ -38,15 +38,14 @@ const (
 // usually called after zero hours
 func AddToday() error {
 
+	// If we don't have it already, add a set of data for today
 	// Lock during add operation
 	mutex.Lock()
-	defer mutex.Unlock()
-
-	// If we don't have it already, add a set of data for today
 	err := dataset.AddToday()
 	if err != nil {
 		return fmt.Errorf("series: failed to add today on series data:%s", err)
 	}
+	mutex.Unlock()
 
 	err = Save("data/series.csv")
 	if err != nil {
@@ -88,14 +87,17 @@ func LoadData(dataPath string) error {
 		return err
 	}
 
-	// If we don't have it already, add a set of data for today
+	// Add today if we don't have it
 	err = dataset.AddToday()
 	if err != nil {
-		return err
+		return fmt.Errorf("series: failed to add today on series data:%s", err)
 	}
 
 	// Finally sort the dataset by deaths, then alphabetically by country/province
 	sort.Stable(dataset)
+
+	// For debug, print today's data after load
+	//dataset.PrintToday()
 
 	return nil
 }
@@ -207,11 +209,12 @@ func Load(p string) error {
 
 	// Make an assumption about the starting date for our data - checked below by checking header
 	// Make an assumption based on that start date of the length of our data file
-	days := int(time.Now().UTC().Sub(seriesStartDate).Hours()/24) + 1
+	days := int(time.Now().UTC().Sub(seriesStartDate).Hours() / 24)
 
 	log.Printf("load: loading series:%s days:%d", p, days)
 
-	// For every series add the right number of days up to and including today
+	// For every series add the right number of days up to but not including today
+	// these days are initially zeroed out before loading from the file
 	for _, series := range dataset {
 		series.AddDays(days)
 	}

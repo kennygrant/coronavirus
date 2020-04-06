@@ -22,11 +22,13 @@ func ScheduleUpdates() {
 
 	// Schedule calls daily and every 10 mins to update data
 	now := time.Now()
-	when := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 1, 0, time.UTC)
-	daily := time.Hour * 24       // daily
-	regularly := 15 * time.Minute // every 15 minutes
 
+	when := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 5, 0, time.UTC)
+	regularly := 15 * time.Minute // every 15 minutes
 	ScheduleAt(updateFrequent, when, regularly)
+
+	when = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 1, 0, time.UTC)
+	daily := time.Hour * 24 // daily
 	ScheduleAt(updateDaily, when, daily)
 
 }
@@ -42,6 +44,7 @@ func updateDaily() {
 		log.Printf("update: failed to add today to series:%s", err)
 		return
 	}
+
 }
 
 // I think for manual updates just edit files and hit the reload endpont
@@ -85,7 +88,8 @@ func updateFrequent() {
 	}
 
 	// Finally attempt to commit the change to the report with a suitable commit message
-	err = gitCommit("Updated from JHU data")
+	message := fmt.Sprintf("Updated from external data for %s", time.Now().UTC().Format("2006-01-02"))
+	err = gitCommit(message)
 	if err != nil {
 		log.Printf("server: failed to commit change:%s", err)
 	}

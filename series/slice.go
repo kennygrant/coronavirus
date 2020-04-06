@@ -25,6 +25,7 @@ func (slice Slice) Less(i, j int) bool {
 // AddToday adds a day for today's date to the end of the dataset
 // if today already exists on the global slice, it does nothing
 func (slice Slice) AddToday() error {
+
 	if len(slice) < 1 {
 		log.Printf("series: addtoday empty dataset")
 		return fmt.Errorf("series: attempt to add today to empty dataset")
@@ -93,6 +94,14 @@ func (slice Slice) PrintSeries(country string, province string) error {
 	}
 	log.Printf("series:%s,%s %v", s.Country, s.Province, s.Days)
 	return nil
+}
+
+// PrintToday prints the data for today for debug purposes
+func (slice Slice) PrintToday() {
+	for _, s := range slice {
+		day := s.LastDay()
+		log.Printf("series:%s last day:%v", s, day)
+	}
 }
 
 // CountryOptions returns a set of options for the country dropdown (including a global one)
