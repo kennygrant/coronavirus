@@ -17,3 +17,4 @@ Series data is stored in a file with an row per day per area_id (where data is n
 * US testing data from (CDC)[https://www.cdc.gov/coronavirus/2019-ncov/cases-updates/testing-in-us.html] and (covidtracking.com)[https://covidtracking.com/data/]
 * UK data sourced from (gov.uk)[https://www.gov.uk/government/publications/covid-19-track-coronavirus-cases] 
 * Test Data from (worldometers)[https://www.worldometers.info/coronavirus/]
+* Japan data from (mhlw.go.jp)[https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/newpage_00032.html]
