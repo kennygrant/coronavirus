@@ -27,9 +27,9 @@
         font-size:2.2em;
     }
     h2 {
+        line-height:2em;
         font-weight:100;
         text-align:center;
-        padding:0.5rem;
         margin:0;
         font-size:1.4em;
     }
