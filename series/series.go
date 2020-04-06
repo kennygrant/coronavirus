@@ -158,6 +158,11 @@ func (d *Data) IsEuropean() bool {
 	return d.Country == "United Kingdom" || d.Country == "France" || d.Country == "Italy" || d.Country == "Belgium" || d.Country == "Spain" || d.Country == "Germany" || d.Country == "Netherlands" || d.Country == "Switzerland" || d.Country == "Sweden" || d.Country == "Portugal"
 }
 
+// HasProvinces returns true if this series has significant provinces to compare (e.g. US, china)
+func (d *Data) HasProvinces() bool {
+	return d.Country == "US" || d.Country == "China" || d.Country == "Canada" || d.Country == "Australia"
+}
+
 // IsCountry returns true if this is the global series
 func (d *Data) IsCountry() bool {
 	return !d.IsGlobal() && !d.IsProvince()

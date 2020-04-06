@@ -143,6 +143,9 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		comparisons = series.TopSeries(country, 10)
 	} else if s.IsEuropean() {
 		comparisons = series.SelectedEuropeanSeries(country, 10)
+	} else if s.HasProvinces() {
+		log.Printf("home: comparing provinces for:%s", country)
+		comparisons = series.TopSeries(country, 10)
 	} else {
 		// Else fetch a selection of copmarative series (for example nearby countries)
 		comparisons = series.SelectedSeries(country, 10)

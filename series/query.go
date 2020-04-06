@@ -110,11 +110,6 @@ func TopSeries(country string, n int) Slice {
 			continue
 		}
 
-		// Exclude provinces
-		if s.IsProvince() {
-			continue
-		}
-
 		// Append all *countries* if global series is given
 		if country == "" && !s.IsProvince() {
 			collection = append(collection, s)
