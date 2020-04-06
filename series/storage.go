@@ -207,9 +207,20 @@ func Save(p string) error {
 // dataset must be locked while performing this operation
 func Load(p string) error {
 
-	// Make an assumption about the starting date for our data - checked below by checking header
-	// Make an assumption based on that start date of the length of our data file
-	days := int(time.Now().UTC().Sub(seriesStartDate).Hours() / 24)
+	// Open the CSV file - one row per day per area
+	rows, err := loadCSV(p)
+	if err != nil {
+		return err
+	}
+
+	// Check the day number on the last row in the series - we want this many days to load into
+	// we assume we start from 1 up to this day number
+	// this may or may not include today
+	days, err := strconv.Atoi(rows[len(rows)-1][0])
+	if err != nil {
+		// If dayno read fails, fall back to days up to but not including today
+		days = int(time.Now().UTC().Sub(seriesStartDate).Hours() / 24)
+	}
 
 	log.Printf("load: loading series:%s days:%d", p, days)
 
@@ -217,12 +228,6 @@ func Load(p string) error {
 	// these days are initially zeroed out before loading from the file
 	for _, series := range dataset {
 		series.AddDays(days)
-	}
-
-	// Open the CSV file - one row per day per area
-	rows, err := loadCSV(p)
-	if err != nil {
-		return err
 	}
 
 	// Range rows loading data for each country from each row
