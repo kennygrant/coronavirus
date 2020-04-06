@@ -50,6 +50,8 @@ func updateDaily() {
 // Called in a goroutine
 // the dataset is somewhat inconsistent and therefore requires some massaging
 // for example not all countries have global data
+// NB after non-essential failures we just continue rather than log an error
+// some datasources may be down for example, but some not
 func updateFrequent() {
 
 	// Pull the repo first with git to be sure we're up to date
@@ -57,8 +59,6 @@ func updateFrequent() {
 	if err != nil {
 		log.Printf("update: failed to pull repo:%s", err)
 	}
-
-	// NB on failre of a download we just continue
 
 	err = updateUKCases()
 	if err != nil {
@@ -77,23 +77,18 @@ func updateFrequent() {
 		return
 	}
 
-	// We should perhaps now save to disk and attempt to commit the change?
-	// this would keep the repo data up to date with automated updates as a ref for others?
-	// it would also give a nice audit trail of updates with clear git diffs
-	/*
-		// Now save the series file to disk
-		err = series.Save("data/series.csv")
-		if err != nil {
-			log.Printf("server: failed to save series data:%s", err)
-			return
-		}
+	// Now save the series file to disk
+	err = series.Save("data/series.csv")
+	if err != nil {
+		log.Printf("server: failed to save series data:%s", err)
+		return
+	}
 
-		// Finally attempt to commit the change to the report with a suitable commit message
-		err = gitCommit("Updated from JHU data")
-		if err != nil {
-			log.Printf("server: failed to commit change:%s", err)
-			return
-		}*/
+	// Finally attempt to commit the change to the report with a suitable commit message
+	err = gitCommit("Updated from JHU data")
+	if err != nil {
+		log.Printf("server: failed to commit change:%s", err)
+	}
 
 }
 
