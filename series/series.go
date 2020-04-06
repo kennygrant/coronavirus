@@ -90,6 +90,10 @@ type Data struct {
 
 	// Days containing all our data - each day holds cumulative totals
 	Days []*Day
+
+	// Previous day stores the previous day for this period (if any)
+	// Used to calculate daily totals when truncated with Period
+	PreviousDay *Day
 }
 
 // Format formats a given number for display and returns a string
@@ -223,17 +227,26 @@ func (d *Data) Period(days int) *Data {
 
 	// Else return series with truncated days
 	i := len(d.Days) - days
+
+	// Previous is used to calculate daily totals for the first day
+	// on truncated series
+	previous := &Day{}
+	if i > 0 {
+		previous = d.Days[i-1]
+	}
+
 	return &Data{
-		ID:         d.ID,
-		Country:    d.Country,
-		Province:   d.Province,
-		Population: d.Population,
-		Latitude:   d.Latitude,
-		Longitude:  d.Longitude,
-		Color:      d.Color,
-		UpdatedAt:  d.UpdatedAt,
-		LockdownAt: d.LockdownAt,
-		Days:       d.Days[i:],
+		ID:          d.ID,
+		Country:     d.Country,
+		Province:    d.Province,
+		Population:  d.Population,
+		Latitude:    d.Latitude,
+		Longitude:   d.Longitude,
+		Color:       d.Color,
+		UpdatedAt:   d.UpdatedAt,
+		LockdownAt:  d.LockdownAt,
+		Days:        d.Days[i:],
+		PreviousDay: previous,
 	}
 }
 
@@ -313,6 +326,9 @@ func (d *Data) Confirmed() (values []int) {
 // DeathsDaily returns an array of int values for deaths per day
 func (d *Data) DeathsDaily() (values []int) {
 	var previous int
+	if d.PreviousDay != nil {
+		previous = d.PreviousDay.Deaths
+	}
 	for _, day := range d.Days {
 		values = append(values, day.Deaths-previous)
 		previous = day.Deaths
@@ -323,6 +339,9 @@ func (d *Data) DeathsDaily() (values []int) {
 // ConfirmedDaily returns an array of int values for confirmed per day
 func (d *Data) ConfirmedDaily() (values []int) {
 	var previous int
+	if d.PreviousDay != nil {
+		previous = d.PreviousDay.Confirmed
+	}
 	for _, day := range d.Days {
 		values = append(values, day.Confirmed-previous)
 		previous = day.Confirmed
