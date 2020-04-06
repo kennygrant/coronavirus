@@ -77,9 +77,10 @@ func processData() error {
 	log.Printf("GLOBAL:%s", global.LastDay())
 
 	// Now write out a series.csv file which contains all our data in the desired format cumulative totals per area per day
-	writeHistoricSeries()
+	//writeHistoricSeries()
 
-	return nil
+	p := filepath.Join("output", "series.csv")
+	return series.Save(p)
 }
 
 // writeHistoricSeries writes out a series.csv file to the data dir
