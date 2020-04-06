@@ -89,7 +89,10 @@ func LoadData(dataPath string) error {
 	}
 
 	// If we don't have it already, add a set of data for today
-	dataset.AddToday()
+	err = dataset.AddToday()
+	if err != nil {
+		return err
+	}
 
 	// Finally sort the dataset by deaths, then alphabetically by country/province
 	sort.Stable(dataset)
@@ -238,7 +241,7 @@ func Load(p string) error {
 
 		series, err := dataset.FindSeries(values[1])
 		if err != nil || series == nil {
-			log.Printf("series: series not found for id:%d", values[1])
+			log.Printf("series: series not found for id:%d index:%d row:%v", values[1], i, row)
 			continue
 		}
 

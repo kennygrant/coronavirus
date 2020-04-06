@@ -26,6 +26,7 @@ func (slice Slice) Less(i, j int) bool {
 // if today already exists on the global slice, it does nothing
 func (slice Slice) AddToday() error {
 	if len(slice) < 1 {
+		log.Printf("series: addtoday empty dataset")
 		return fmt.Errorf("series: attempt to add today to empty dataset")
 	}
 
@@ -33,6 +34,7 @@ func (slice Slice) AddToday() error {
 	// NB we assume a certain start date for today
 	days := int(time.Now().UTC().Sub(seriesStartDate).Hours()/24) + 1
 	if days <= len(slice[0].Days) {
+		log.Printf("series: addtoday have enough days:%d global days:%d", days, len(slice[0].Days))
 		return nil
 	}
 
@@ -42,7 +44,6 @@ func (slice Slice) AddToday() error {
 	}
 
 	return nil
-
 }
 
 // FetchDate fetches the datapoint for a given datum and date
