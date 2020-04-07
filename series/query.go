@@ -43,7 +43,7 @@ func SelectedEuropeanSeries(country string, n int) Slice {
 		if s.Country == country {
 			collection = append(collection, s)
 			count++
-		} else if s.Country == "Italy" || s.Country == "Spain" || s.Country == "France" || s.Country == "Switzerland" || s.Country == "Germany" || s.Country == "United Kingdom" {
+		} else if s.Country == "Italy" || s.Country == "Spain" || s.Country == "France" || s.Country == "Switzerland" || s.Country == "Germany" || s.Country == "United Kingdom" || s.Country == "Sweden" || s.Country == "Netherlands" {
 			collection = append(collection, s)
 			count++
 		}
@@ -59,9 +59,16 @@ func SelectedSeries(country string, n int) Slice {
 	mutex.RLock()
 	defer mutex.RUnlock()
 
-	// Fetch all top series
 	var count int
 	var collection Slice
+
+	// Always include this country in the selected series
+	s, err := FetchSeries(country, "")
+	if err == nil {
+		collection = append(collection, s)
+	}
+
+	// Fetch all top series
 	for _, s := range dataset {
 		if count >= n {
 			break
@@ -77,23 +84,29 @@ func SelectedSeries(country string, n int) Slice {
 			continue
 		}
 
-		// Always include country
-		if s.Country == country {
-			collection = append(collection, s)
-			count++
-		} else if country == "Spain" || country == "US" || country == "United Kingdom" || country == "China" || country == "Japan" {
+		switch s.Country {
+		case "Italy":
+			fallthrough
+		case "US":
+			fallthrough
+		case "Japan":
+			fallthrough
+		case "China":
+			fallthrough
+		case "Germany":
+			fallthrough
+		case "United Kingdom":
 			collection = append(collection, s)
 			count++
 		}
-
 	}
 
 	return collection
 
 }
 
-// TopSeries selects the top n series by deaths
-func TopSeries(country string, n int) Slice {
+// TopSeriesGlobal selects the top n series by deaths for global page
+func TopSeriesGlobal(country string, n int) Slice {
 	mutex.RLock()
 	defer mutex.RUnlock()
 
@@ -110,11 +123,32 @@ func TopSeries(country string, n int) Slice {
 			continue
 		}
 
-		// Append all *countries* if global series is given
-		if country == "" && !s.IsProvince() {
+		// Append all *countries* up to count
+		if !s.IsProvince() {
 			collection = append(collection, s)
 			count++
-		} else if s.MatchCountry(country) && s.IsProvince() {
+		}
+
+	}
+
+	return collection
+}
+
+// TopSeries selects the top n series by deaths
+func TopSeries(country string, n int) Slice {
+	mutex.RLock()
+	defer mutex.RUnlock()
+
+	// Fetch all top series
+	var count int
+	var collection Slice
+	for _, s := range dataset {
+		if count >= n {
+			break
+		}
+
+		// Append all provinces of this country
+		if s.MatchCountry(country) && s.IsProvince() {
 			// Append any provinces for this country if a country series is given
 			collection = append(collection, s)
 			count++

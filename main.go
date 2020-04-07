@@ -140,7 +140,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	// For global compare growth rate of top 20 series
 	var comparisons series.Slice
 	if s.IsGlobal() {
-		comparisons = series.TopSeries(country, 10)
+		comparisons = series.TopSeriesGlobal(country, 10)
 	} else if s.IsEuropean() {
 		comparisons = series.SelectedEuropeanSeries(country, 10)
 	} else if s.HasProvinces() {
