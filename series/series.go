@@ -440,12 +440,32 @@ func (d *Data) LastHours() int {
 }
 
 // Dates returns a set of date labels as an array of strings
-// for every datapoint in this series
+// for every datapoint in this series for use in chart labels
 func (d *Data) Dates() (dates []string) {
 	for _, day := range d.Days {
-		dates = append(dates, day.Date.Format("Jan 2"))
+		// Lockdown date gets lockdown label
+		if d.LockdownAt.Equal(day.Date) {
+			dates = append(dates, day.Date.Format("Jan 2 (Lockdown)"))
+		} else {
+			dates = append(dates, day.Date.Format("Jan 2"))
+		}
+
 	}
 	return dates
+}
+
+// Colors returns a set of hex colours as an array of strings
+// for every datapoint in this series
+func (d *Data) Colors(color string) (colors []string) {
+	for _, day := range d.Days {
+		// Lockdown date gets red colour
+		if d.LockdownAt.Equal(day.Date) {
+			colors = append(colors, "#ff0000")
+		} else {
+			colors = append(colors, color)
+		}
+	}
+	return colors
 }
 
 // Count returns the count of days in this series

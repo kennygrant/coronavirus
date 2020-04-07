@@ -350,14 +350,14 @@ var chartOptions = {
 
 
 var chartDailyDeathsData = {
-      "labels":{{.series.Dates}},
-      "datasets":[{
-        "label":"COVID-19 Daily Deaths",
-        "data":{{.series.DeathsDaily}},
-        "fill":true,
-        "borderWidth":"0",
-        "backgroundColor":"rgba(10, 0, 0,0.7)",
-        "lineTension":0.1
+      labels:{{.series.Dates}},
+      datasets:[{
+        label:"COVID-19 Daily Deaths",
+        data:{{.series.DeathsDaily}},
+        fill:true,
+        borderWidth:"0",
+        backgroundColor: {{.series.Colors "#664444"}},
+        lineTension:0.1
         }]
 }
 
