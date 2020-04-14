@@ -32,6 +32,15 @@ func UpdateFromJHUCountryCases(rows [][]string) error {
 		country := row[0]
 		province := ""
 
+		// Transform countries
+		switch country {
+		case "Burma":
+			country = "Myanmar"
+		case "Taiwan*":
+			country = "Taiwan"
+		case "Korea, South":
+			country = "South Korea"
+		}
 		// Find the series for this row
 		series, err := dataset.FetchSeries(country, province)
 		if err != nil || series == nil {
