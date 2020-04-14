@@ -235,7 +235,7 @@ func loadJHUSeries(p string) error {
 			if province == "British Virgin Islands" {
 				province = "Virgin Islands"
 			}
-			if province == "Falkland Islands (Islas Malvinas)" {
+			if province == "Falkland Islands (Malvinas)" {
 				province = "Falkland Islands"
 			}
 		}

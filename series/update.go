@@ -70,31 +70,47 @@ func UpdateFromJHUStatesCases(rows [][]string) error {
 	for i, row := range rows {
 		// Check format on row 0
 		if i == 0 {
-			if row[0] != "Province_State" || row[2] != "Last_Update" || row[8] != "Active" {
+			if row[0] != "Province_State" || row[1] != "Country_Region" || row[2] != "Last_Update" || row[8] != "Active" {
 				return fmt.Errorf("error reading JHU states cases - format invalid for row:%s", row)
 			}
 			continue
 		}
 
-		country := row[2]
-		province := row[1]
+		country := row[1]
+		province := row[0]
+
+		// Rename or ignore some series
+		switch province {
+		case "Falkland Islands (Malvinas)":
+			province = "Falkland Islands"
+		case "British Virgin Islands":
+			province = "Virgin Islands"
+		case "Grand Princess":
+			continue
+		case "Diamond Princess":
+			continue
+		case "Recovered":
+			continue
+		}
 
 		// Find the series concerned
 		series, err := dataset.FetchSeries(country, province)
 		if err != nil || series == nil {
+			log.Printf("series: state series not found for:%s,%s", country, province)
 			continue
 		}
 
 		// If we reach here we have a valid row and series - NB shuffled cols to match our default
 		updated, deaths, confirmed, recovered, err := readJHURowData(row[2], row[6], row[5], row[7])
 		if err != nil {
+			log.Printf("series: error reading state row:%s\n\terror:%s", row, err)
 			continue
 		}
 
 		// We don't have tested data from JHU so leave it unchanged
 		series.UpdateToday(updated, deaths, confirmed, recovered, 0)
 
-		log.Printf("update: %s u:%v d:%d c:%d r:%d", series, updated, deaths, confirmed, recovered)
+		log.Printf("update province: %s u:%v d:%d c:%d r:%d", series, updated, deaths, confirmed, recovered)
 
 	}
 
@@ -104,26 +120,40 @@ func UpdateFromJHUStatesCases(rows [][]string) error {
 // Note csv col order is different from our standard order
 func readJHURowData(updatedstr, deathsstr, confirmedstr, recoveredstr string) (time.Time, int, int, int, error) {
 
-	// Dates are, remarkably, in two different formats in one file
-	// Try first in the one true format
-	updated, err := time.Parse("2006-01-02 15:04:05", updatedstr)
-	if err != nil {
-		return updated, 0, 0, 0, fmt.Errorf("load: error reading updated at series:%s error:%s", updatedstr, err)
+	var err error
+	var deaths, confirmed, recovered int
+	updated := time.Now().UTC()
+
+	// Ignore dates which are not present (this applies to all non-use series now)
+	if updatedstr != "" {
+		updated, err := time.Parse("2006-01-02 15:04:05", updatedstr)
+		if err != nil {
+			return updated, 0, 0, 0, fmt.Errorf("load: error reading updated at series:%s error:%s", updatedstr, err)
+		}
 	}
 
-	deaths, err := strconv.Atoi(deathsstr)
-	if err != nil {
-		return updated, 0, 0, 0, fmt.Errorf("load: error reading deaths series:%s error:%s", deathsstr, err)
+	// Deal with inconsistent data like empty entries
+
+	if deathsstr != "" {
+		deaths, err = strconv.Atoi(deathsstr)
+		if err != nil {
+			return updated, 0, 0, 0, fmt.Errorf("load: error reading deaths series:%s error:%s", deathsstr, err)
+		}
 	}
 
-	confirmed, err := strconv.Atoi(confirmedstr)
-	if err != nil {
-		return updated, 0, 0, 0, fmt.Errorf("load: error reading confirmed series:%s error:%s", confirmedstr, err)
+	if confirmedstr != "" {
+		confirmed, err = strconv.Atoi(confirmedstr)
+		if err != nil {
+			return updated, 0, 0, 0, fmt.Errorf("load: error reading confirmed series:%s error:%s", confirmedstr, err)
+		}
 	}
 
-	recovered, err := strconv.Atoi(recoveredstr)
-	if err != nil {
-		return updated, 0, 0, 0, fmt.Errorf("load: error reading recovered series:%s error:%s", recoveredstr, err)
+	if recoveredstr != "" {
+		recovered, err = strconv.Atoi(recoveredstr)
+		if err != nil {
+			return updated, 0, 0, 0, fmt.Errorf("load: error reading recovered series:%s error:%s", recoveredstr, err)
+		}
+
 	}
 
 	return updated, deaths, confirmed, recovered, nil
