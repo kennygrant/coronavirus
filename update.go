@@ -131,7 +131,7 @@ func updateJHUCases() error {
 		return fmt.Errorf("server: failed to update from JHU data :%s", err)
 	}
 
-	// Update from the cases_states file for US states data
+	// Update from the cases_states file for sub-country state data
 
 	// Download the US states cases file into csv rows
 	filePath = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/web-data/data/cases_state.csv"

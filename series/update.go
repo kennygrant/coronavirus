@@ -70,7 +70,7 @@ func UpdateFromJHUStatesCases(rows [][]string) error {
 	for i, row := range rows {
 		// Check format on row 0
 		if i == 0 {
-			if row[0] != "FIPS" || row[3] != "Last_Update" || row[9] != "Active" {
+			if row[0] != "Province_State" || row[2] != "Last_Update" || row[8] != "Active" {
 				return fmt.Errorf("error reading JHU states cases - format invalid for row:%s", row)
 			}
 			continue
@@ -86,7 +86,7 @@ func UpdateFromJHUStatesCases(rows [][]string) error {
 		}
 
 		// If we reach here we have a valid row and series - NB shuffled cols to match our default
-		updated, deaths, confirmed, recovered, err := readJHURowData(row[3], row[7], row[6], row[8])
+		updated, deaths, confirmed, recovered, err := readJHURowData(row[2], row[6], row[5], row[7])
 		if err != nil {
 			continue
 		}
