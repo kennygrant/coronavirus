@@ -63,11 +63,13 @@ func updateFrequent() {
 		log.Printf("update: failed to pull repo:%s", err)
 	}
 
-	err = updateUKCases()
-	if err != nil {
-		log.Printf("update: UK FAILED:%s", err)
-	}
-
+	// This data source is not reliable - find another source for UK regions
+	/*
+		err = updateUKCases()
+		if err != nil {
+			log.Printf("update: UK FAILED:%s", err)
+		}
+	*/
 	err = updateJHUCases()
 	if err != nil {
 		log.Printf("update: JHU FAILED:%s", err)
