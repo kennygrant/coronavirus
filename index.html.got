@@ -206,11 +206,15 @@
 
     <a name="deaths_daily"></a>
     <h3 class="deaths">{{.series.Format .series.DeathsToday }} deaths reported in last {{.series.LastHours}} hours</h3>
-    <h4>{{.series.Format .series.AverageDeaths}} deaths 3 day average</h4>
+    <h4>{{.series.Format .series.AverageDeaths}} deaths 3 day average
+    {{ if .series.HasLockdownAt }}
+    &nbsp; Lockdown {{.series.LockdownAt.Format "2006-01-02"}}
+    {{ end }}
+    </h4>
     <div class="chart_container">
         <canvas class="chart" id="chartDailyDeaths" ></canvas>
     </div>
-
+    
     <a name="deaths"></a>
     <h3 class="deaths">{{.series.Format .series.TotalDeaths}} deaths in {{.series.Count}} days</h3>
     <h4>2x in {{.series.DoubleDeathDays}} days</h4>

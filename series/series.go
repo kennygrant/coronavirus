@@ -504,6 +504,11 @@ func (d *Data) Colors(color string) (colors []string) {
 	return colors
 }
 
+// HasLockdownAt returns true if we have a lockdown date
+func (d *Data) HasLockdownAt() bool {
+	return !d.LockdownAt.IsZero()
+}
+
 // Count returns the count of days in this series
 func (d *Data) Count() int {
 	return len(d.Days)
