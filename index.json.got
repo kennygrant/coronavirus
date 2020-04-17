@@ -4,7 +4,12 @@
     "province"  : "{{e .series.Province}}",
     "alltimeDeaths": {{ .allTimeDeaths }},
     "allTimeConfirmed": {{ .allTimeConfirmed }},
+    "allTimeRecovered": {{ .allTimeRecovered }},
+    "allTimeTested": {{ .allTimeTested }},
+    "start" : "{{ .series.StartsAt.Format "2006-01-02T15:04:05Z" }}",
     "dates"     : {{ls .series.Dates}},
     "deaths"    : {{l .series.Deaths}},
-    "confirmed" : {{l .series.Confirmed}}
+    "confirmed" : {{l .series.Confirmed}},
+    "recovered" : {{l .series.Recovered}},
+    "tested" : {{l .series.Tested}}
 }

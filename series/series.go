@@ -130,6 +130,22 @@ func (d *Data) Title() string {
 	return fmt.Sprintf("%s (%s)", d.Province, d.Country)
 }
 
+// StartsAt retuns a string to display for the first date of the series
+// if no days are available or date is zero date, default start is returned
+func (d *Data) StartsAt() time.Time {
+	day := d.FirstDay()
+	if day.Date.IsZero() {
+		return seriesStartDate
+	}
+
+	return day.Date
+}
+
+// StartsAtDisplay retuns a string to display for the first date of the series
+func (d *Data) StartsAtDisplay() string {
+	return d.StartsAt().Format("2006-01-02")
+}
+
 // UpdatedAtDisplay retuns a string to display updated at date (if we have a date)
 func (d *Data) UpdatedAtDisplay() string {
 	if d.UpdatedAt.IsZero() {
@@ -328,6 +344,24 @@ func (d *Data) Confirmed() (values []int) {
 	return values
 }
 
+// Recovered returns cumulative totals of recovered as integer values
+// values are typically 0 if not available
+func (d *Data) Recovered() (values []int) {
+	for _, day := range d.Days {
+		values = append(values, day.Recovered)
+	}
+	return values
+}
+
+// Tested returns cumulative totals of Tested as integer values
+// values are typically 0 if not available
+func (d *Data) Tested() (values []int) {
+	for _, day := range d.Days {
+		values = append(values, day.Tested)
+	}
+	return values
+}
+
 // DeathsDaily returns an array of int values for deaths per day
 func (d *Data) DeathsDaily() (values []int) {
 	var previous int
@@ -443,13 +477,15 @@ func (d *Data) LastHours() int {
 // for every datapoint in this series for use in chart labels
 func (d *Data) Dates() (dates []string) {
 	for _, day := range d.Days {
-		// Lockdown date gets lockdown label
-		if d.LockdownAt.Equal(day.Date) {
-			dates = append(dates, day.Date.Format("Jan 2 (Lockdown)"))
-		} else {
-			dates = append(dates, day.Date.Format("Jan 2"))
-		}
-
+		dates = append(dates, day.Date.Format("Jan 2"))
+		/*
+			// Lockdown date gets lockdown label no longer
+			if d.LockdownAt.Equal(day.Date) {
+				dates = append(dates, day.Date.Format("Jan 2 (Lockdown)"))
+			} else {
+				dates = append(dates, day.Date.Format("Jan 2"))
+			}
+		*/
 	}
 	return dates
 }
