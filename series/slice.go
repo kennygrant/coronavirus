@@ -85,6 +85,28 @@ func (slice Slice) FindSeries(seriesID int) (*Data, error) {
 	return &Data{}, fmt.Errorf("series: not found")
 }
 
+// DaysFrom returns day counts from a series of numbers
+func (slice Slice) DaysFrom(startDeaths int) []string {
+	if len(slice) == 0 {
+		return nil
+	}
+
+	// Find our longest series and return day labels using that
+	// other series will be shown ending before this one
+	count := 0
+	longest := slice[0]
+	for _, s := range slice {
+		deaths := s.DeathsFrom(startDeaths)
+		if len(deaths) > count {
+			count = len(deaths)
+			longest = s
+		}
+	}
+
+	// Return date labels from that series
+	return longest.DaysFrom(longest.DeathsFrom(startDeaths))
+}
+
 // PrintSeries uses our stored data to fetch a series
 func (slice Slice) PrintSeries(country string, province string) error {
 	s, err := slice.FetchSeries(country, province)

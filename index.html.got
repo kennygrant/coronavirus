@@ -488,10 +488,8 @@ var chartComparisonOptions = {
     maintainAspectRatio:false
 }
 
-{{ $firstSeries := (index .comparisons 0) }}
-
 var chartComparisonDeathsData = {
-      labels:{{ $firstSeries.DaysFrom ($firstSeries.DeathsFrom .startDeaths) }},
+      labels:{{ .comparisons.DaysFrom .startDeaths }},
       datasets:[
       {{ range $i,$s := .comparisons}}{{if not (eq $i 0) }},{{end}}{
             fill: false,
