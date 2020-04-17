@@ -111,7 +111,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	mobile := strings.Contains(strings.ToLower(r.UserAgent()), "mobile")
 
 	if startDeaths == 0 {
-		startDeaths = 5
+		startDeaths = 100
 	}
 
 	// Use a default period depending on device if none selected
