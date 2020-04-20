@@ -164,6 +164,11 @@ func Save(p string) error {
 	for i := 0; i < days; i++ {
 		dayNumber := i + 1
 		for _, s := range dataset {
+			// Should never happen but if missing series data it can
+			if i > len(s.Days)-1 {
+				log.Printf("series: days out of range for series:%d", s.ID)
+				continue
+			}
 			d := s.Days[i]
 			if !d.IsZero() {
 				seriesData = append(seriesData, []int{dayNumber, s.ID, d.Deaths, d.Confirmed, d.Recovered, d.Tested})
