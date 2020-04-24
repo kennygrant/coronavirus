@@ -91,9 +91,13 @@ func SelectedSeries(country string, n int) Slice {
 			fallthrough
 		case "Japan":
 			fallthrough
-		case "China":
+		case "Brazil":
 			fallthrough
 		case "Germany":
+			fallthrough
+		case "Iran":
+			fallthrough
+		case "Sweden":
 			fallthrough
 		case "United Kingdom":
 			collection = append(collection, s)
@@ -116,6 +120,10 @@ func TopSeriesGlobal(country string, n int) Slice {
 	for _, s := range dataset {
 		if count >= n {
 			break
+		}
+		// Exclude China - distorts chart and figures unreliable
+		if s.Country == "China" {
+			continue
 		}
 
 		// Exclude global series
