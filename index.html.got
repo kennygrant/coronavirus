@@ -280,7 +280,7 @@
 
 
     <footer>
-        <p>Data from <a href="https://github.com/CSSEGISandData/COVID-19">Johns Hopkins University</a>, updated hourly. Code on <a href="https://github.com/kennygrant/coronavirus">Github</a>. Hosted on Digital Ocean.</p>
+        <p>Data from <a href="https://github.com/CSSEGISandData/COVID-19">Johns Hopkins University</a> and Government sources, updated regularly. Code on <a href="https://github.com/kennygrant/coronavirus">Github</a>. Hosted on <a href="https://m.do.co/c/45dc49ca8623">Digital Ocean</a>.</p>
     </footer>
 
 
