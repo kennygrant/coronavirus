@@ -101,19 +101,19 @@ func updateFrequent() {
 // Update UK stats linked from gov.uk
 // https://www.gov.uk/guidance/coronavirus-covid-19-information-for-the-public#number-of-cases-and-deaths
 func updateUKCases() error {
+	/*
+		filePath := "https://c19downloads.azureedge.net/downloads/json/coronavirus-deaths_latest.json"
 
-	filePath := "https://services1.arcgis.com/0IrmI40n5ZYxTUrV/arcgis/rest/services/DailyIndicators/FeatureServer/0/query?where=TotalUKCases%3E0&objectIds=&time=&resultType=standard&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pgeojson&token="
+		jsonData, err := downloadJSON(filePath)
+		if err != nil {
+			return fmt.Errorf("server: failed to download UK json:%s", err)
+		}
 
-	jsonData, err := downloadJSON(filePath)
-	if err != nil {
-		return fmt.Errorf("server: failed to download UK json:%s", err)
-	}
-
-	err = series.UpdateFromUKStats(jsonData)
-	if err != nil {
-		return fmt.Errorf("server: failed to parse UK json:%s", err)
-	}
-
+			err = series.UpdateFromUKStats(jsonData)
+			if err != nil {
+				return fmt.Errorf("server: failed to parse UK json:%s", err)
+			}
+	*/
 	return nil
 }
 
