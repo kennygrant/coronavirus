@@ -3,7 +3,7 @@
 
 Website: <a href="https://coronavirus.projectpage.app">https://coronavirus.projectpage.app</a>
 
-This project uses data from to product charts of deaths, confirmed cases and recovered cases from countries globally, based on data provided by <a href="https://systems.jhu.edu/research/public-health/ncov/">John Hopkins University</a>. The source data is available <a href="https://github.com/CSSEGISandData/COVID-19">here</a> on github and is updated hourly from that source.  
+This project uses data from to product charts of deaths, confirmed cases and recovered cases from countries globally, based on data provided by JHU, the UK government, and the ECDC.
 
 ![Covid-19](docs/images/global.png)
 
@@ -24,12 +24,35 @@ At the bottom of the first page is a chart comparing global rates of death, insp
 # Notes on Data
 There are some inconsistencies in the source data, which where possible have been corrected. All changes made to the data are outlined below. 
 
-The main datasource changed significantly on 24th March, just after launching this page, and unfortunately no longer provides a breakdown of US states in the time series data, only the daily data. I'm investigating ways to address that, but for now there is only one entry for the US.
+## 2020-05-06
+
+* Switched to sourcing UK deaths data from UK site
+* UK testing data updated based on UK DHSC releases
+
+## 2020-04-20
+
+* Fix NY data for day 89
+* UK and US testing data added
+* Use preliminary UK data from UK gov
+
+## 2020-04-16
+
+* Fix Germany deaths for 2020-04-11
+* Fix early US state data from JHU, updated later
+
+
+## 2020-04-07
+
+* Fix missing historical data - Wisconsin, Virginia, Montana
+* Add lockdown dates 
+
+## 2020-04-06
+
+* Province comparisons
 
 ## 2020-03-27
 
 * Investigating maintaining separate data files so that US states can be restored, and data can be updated by multiple people easily
-
 
 ## 2020-03-24
 
@@ -45,6 +68,12 @@ The main datasource changed significantly on 24th March, just after launching th
 * Added Austrilia overall data - a sum of all other series with country Austrilia
 * Added Canada overall data - a sum of all other series with country Canada
 
+
+# Data Sources
+
+* <a href="https://systems.jhu.edu/research/public-health/ncov/">John Hopkins University</a>
+* <a href="https://www.ecdc.europa.eu/en/publications-data/download-todays-data-geographic-distribution-covid-19-cases-worldwide">ECDC</a>
+* <a href="https://coronavirus.data.gov.uk/#countries">UK Department of Health and Social Care</a>
 
 
 # Installation 
