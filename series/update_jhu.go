@@ -31,6 +31,11 @@ func UpdateFromJHUCountryCases(rows [][]string) error {
 		country := row[0]
 		province := ""
 
+		// Skip some countries for which we have data from a country provider
+		if country == "United Kingdom" {
+			continue
+		}
+
 		// Transform countries
 		switch country {
 		case "Burma":
