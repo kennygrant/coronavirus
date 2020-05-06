@@ -1,7 +1,5 @@
 package series
 
-import ()
-
 // FetchSeries uses our stored dataset to fetch a series
 func FetchSeries(country string, province string) (*Data, error) {
 	mutex.RLock()
@@ -63,9 +61,9 @@ func SelectedSeries(country string, n int) Slice {
 	var collection Slice
 
 	// Always include this country in the selected series
-	s, err := FetchSeries(country, "")
+	countrySeries, err := FetchSeries(country, "")
 	if err == nil {
-		collection = append(collection, s)
+		collection = append(collection, countrySeries)
 	}
 
 	// Fetch all top series
@@ -81,6 +79,11 @@ func SelectedSeries(country string, n int) Slice {
 
 		// Exclude provinces for now
 		if s.IsProvince() {
+			continue
+		}
+
+		// Skip country already added
+		if s == countrySeries {
 			continue
 		}
 

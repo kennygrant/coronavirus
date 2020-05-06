@@ -148,6 +148,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		comparisons = series.TopSeries(country, 10)
 	} else {
 		// Else fetch a selection of copmarative series (for example nearby countries)
+		log.Printf("home: generic compare for:%s %s", country, province)
 		comparisons = series.SelectedSeries(country, 10)
 	}
 
