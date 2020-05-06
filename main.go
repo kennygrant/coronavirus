@@ -42,12 +42,6 @@ func main() {
 		log.Fatalf("server: failed to load new data:%s", err)
 	}
 
-	// TMP - replace historical uk data
-	err = series.UpdateHistoricalUKData()
-	if err != nil {
-		log.Fatalf("server: failed to load new data:%s", err)
-	}
-
 	// Schedule a regular data update/reload - don't bother in development except when testing
 	if !development {
 		ScheduleUpdates()
