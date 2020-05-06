@@ -36,7 +36,7 @@ func TestHistoricalUKJSON(t *testing.T) {
 		t.Fatalf("json parse err:%s", err)
 	}
 
-	err = UpdateHistoricalUKDeaths(jsonData)
+	err = UpdateUKDeaths(jsonData)
 	if err != nil {
 		t.Fatalf("failed to parse UK json:%s", err)
 	}

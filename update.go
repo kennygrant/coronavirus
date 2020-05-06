@@ -63,19 +63,18 @@ func updateFrequent() {
 		log.Printf("update: failed to pull repo:%s", err)
 	}
 
-	// This data source is not reliable - find another source for UK regions
-	/*
-		err = updateUKCases()
-		if err != nil {
-			log.Printf("update: UK FAILED:%s", err)
-		}
-	*/
+	// Use UK government data for uk series
+	err = updateUKCases()
+	if err != nil {
+		log.Printf("update: UK FAILED:%s", err)
+	}
+
 	err = updateJHUCases()
 	if err != nil {
 		log.Printf("update: JHU FAILED:%s", err)
 	}
 
-	// Now update our global series which are unfortunteley not contained in this data
+	// Now update our global series which are unfortunately not contained in this data
 	err = series.CalculateGlobalSeriesData()
 	if err != nil {
 		log.Printf("update: failed to calculate global series :%s", err)
@@ -101,19 +100,18 @@ func updateFrequent() {
 // Update UK stats linked from gov.uk
 // https://www.gov.uk/guidance/coronavirus-covid-19-information-for-the-public#number-of-cases-and-deaths
 func updateUKCases() error {
-	/*
-		filePath := "https://c19downloads.azureedge.net/downloads/json/coronavirus-deaths_latest.json"
 
-		jsonData, err := downloadJSON(filePath)
-		if err != nil {
-			return fmt.Errorf("server: failed to download UK json:%s", err)
-		}
+	filePath := "https://c19downloads.azureedge.net/downloads/json/coronavirus-deaths_latest.json"
+	jsonData, err := downloadJSON(filePath)
+	if err != nil {
+		return fmt.Errorf("server: failed to download UK json:%s", err)
+	}
 
-			err = series.UpdateFromUKStats(jsonData)
-			if err != nil {
-				return fmt.Errorf("server: failed to parse UK json:%s", err)
-			}
-	*/
+	err = series.UpdateUKDeaths(jsonData)
+	if err != nil {
+		return fmt.Errorf("server: failed to parse UK json:%s", err)
+	}
+
 	return nil
 }
 
