@@ -130,11 +130,14 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		s = s.Period(period)
 	}
 
-	scale := "linear"
-	scaleURL := r.URL.Path + "?scale=log#growth"
-	if param(r, "scale") == "log" {
+	var scale string
+	var scaleURL string
+	if param(r, "scale") == "linear" {
+		scale = "linear"
+		scaleURL = r.URL.Path + "?scale=log#growth"
+	} else {
 		scale = "logarithmic"
-		scaleURL = r.URL.Path + "#growth"
+		scaleURL = r.URL.Path + "?scale=linear#growth"
 	}
 
 	// For global compare growth rate of top 20 series
@@ -145,7 +148,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		comparisons = series.SelectedEuropeanSeries(country, 10)
 	} else if s.HasProvinces() {
 		log.Printf("home: comparing provinces for:%s", country)
-		comparisons = series.TopSeries(country, 10)
+		comparisons = series.TopSeries(country, 20)
 	} else {
 		// Else fetch a selection of copmarative series (for example nearby countries)
 		log.Printf("home: generic compare for:%s %s", country, province)
