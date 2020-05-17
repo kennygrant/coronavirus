@@ -54,6 +54,7 @@ func UpdateFromJHUCountryCases(rows [][]string) error {
 		// If we reach here we have a valid row and series - NB shuffled cols to match our default
 		updated, deaths, confirmed, recovered, err := readJHURowData(row[1], row[5], row[4], row[6])
 		if err != nil {
+			log.Printf("update: error updating series:%s error:%s", series, err)
 			continue
 		}
 
@@ -123,7 +124,7 @@ func UpdateFromJHUStatesCases(rows [][]string) error {
 		// We don't have tested data from JHU so leave it unchanged
 		series.UpdateToday(updated, deaths, confirmed, recovered, 0)
 
-		log.Printf("update province: %s u:%v d:%d c:%d r:%d", series, updated, deaths, confirmed, recovered)
+		//	log.Printf("update province: %s u:%v d:%d c:%d r:%d", series, updated, deaths, confirmed, recovered)
 
 	}
 
@@ -134,6 +135,7 @@ func UpdateFromJHUStatesCases(rows [][]string) error {
 func readJHURowData(updatedstr, deathsstr, confirmedstr, recoveredstr string) (time.Time, int, int, int, error) {
 
 	var err error
+	var d, c, r float64
 	var deaths, confirmed, recovered int
 	updated := time.Now().UTC()
 
@@ -146,27 +148,30 @@ func readJHURowData(updatedstr, deathsstr, confirmedstr, recoveredstr string) (t
 	}
 
 	// Deal with inconsistent data like empty entries
+	// Inexplicably, the data from JHU now comes as floats (so you can half a death presumably)
 
 	if deathsstr != "" {
-		deaths, err = strconv.Atoi(deathsstr)
+		d, err = strconv.ParseFloat(deathsstr, 32)
 		if err != nil {
 			return updated, 0, 0, 0, fmt.Errorf("load: error reading deaths series:%s error:%s", deathsstr, err)
 		}
+		deaths = int(d)
 	}
 
 	if confirmedstr != "" {
-		confirmed, err = strconv.Atoi(confirmedstr)
+		c, err = strconv.ParseFloat(confirmedstr, 32)
 		if err != nil {
 			return updated, 0, 0, 0, fmt.Errorf("load: error reading confirmed series:%s error:%s", confirmedstr, err)
 		}
+		confirmed = int(c)
 	}
 
 	if recoveredstr != "" {
-		recovered, err = strconv.Atoi(recoveredstr)
+		r, err = strconv.ParseFloat(recoveredstr, 32)
 		if err != nil {
 			return updated, 0, 0, 0, fmt.Errorf("load: error reading recovered series:%s error:%s", recoveredstr, err)
 		}
-
+		recovered = int(r)
 	}
 
 	return updated, deaths, confirmed, recovered, nil
