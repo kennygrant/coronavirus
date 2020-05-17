@@ -741,8 +741,13 @@ func (d *Data) ShouldIncludeInGlobal() bool {
 		return false
 	}
 
-	// Exclude our extra UK provinces from gloval total as we have a UK entry from JHU
+	// Exclude our extra UK provinces from global total as we have a UK entry
 	if d.Country == "United Kingdom" && (d.Province == "England" || d.Province == "Scotland" || d.Province == "Wales" || d.Province == "Northern Ireland") {
+		return false
+	}
+
+	// Exclude Germany, Italy, Spain provinces as we have global entries
+	if d.IsProvince() && d.Country == "Germany" || d.IsProvince() && d.Country == "Italy" || d.IsProvince() && d.Country == "Spain" {
 		return false
 	}
 
